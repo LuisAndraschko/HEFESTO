@@ -1,0 +1,130 @@
+{% extends "layout.html" %}
+{% block content %}
+    <div class="row p-0 mt-0 mb-4 mx-4">
+        <div class="col-md-8">
+            <div class="col">
+                <div class="card mb-3">
+                    <div class="row g-0">
+                        <div class="col-md-4">
+                            <img src="../static/home_img/desenho.svg" class="img-fluid rounded-start" alt="...">
+                        </div>
+                        <div class="d-flex flex-column col-md-8">
+                            <div class="card-body">
+                                <h5 class="card-title">Conversão PU</h5>
+                                <p class="card-text">Com esta ferramenta você poderá converter um modelo de sistema elétrico de potência em seu equivalente em pu a partir das características dos componentes, suas ligações e as grandezas base da rede, tensão e potência de base.</p>                            
+                            </div>
+                            <div class="d-flex justify-content-end p-3">
+                                <a href="{{ url_for('pu_conversion') }}" class="p-2 btn btn-primary bg-dark">Utilizar ferramenta</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>            
+            </div>
+            <div class="col">
+                <div class="card mb-3">
+                    <div class="row g-0">
+                        <div class="col-md-4">
+                            <img src="../static/home_img/MAN.svg " class="img-fluid rounded-start" alt="...">
+                        </div>
+                        <div class="d-flex flex-column col-md-8">
+                            <div class="card-body">
+                                <h5 class="card-title">Matriz de Admitância Nodal</h5>
+                                <p class="card-text mb-1">Com esta ferramenta você poderá gerar a matriz de admitância nodal a partir de um circuito de impedâncias e/ou admitâncias. Os dados de entrada podem ser fornecidos de 3 formas:</p>
+                                <ul class="m-0 ps-5">
+                                    <li>campo a campo.</li>
+                                    <li>através de um modelo padronizado de excel.</li>
+                                    <li>através do resultado da conversão PU.</li>
+                                </ul>                            
+                            </div>
+                            <div class="d-flex justify-content-end p-3">
+                                <a href="{{ url_for('admittance_matrix') }}" class="p-2 btn btn-primary bg-dark">Utilizar ferramenta</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>            
+            </div>
+            <div class="col">
+                <div class="card mb-3">
+                    <div class="row g-0">
+                        <div class="col-md-4">
+                            <img src="../static/home_img//RN.svg" class="img-fluid rounded-start" alt="...">
+                        </div>
+                        <div class="d-flex flex-column col-md-8">
+                            <div class="card-body">
+                                <h5 class="card-title">Redução de Nós</h5>
+                                <p class="card-text">Com esta ferramenta você poderá eliminar qualquer barra de uma dada matriz, uma por vez. Entretanto essa ferramenta só é acessível pelo resultado da ferramenta Matriz de Admitância Nodal.</p>                            
+                            </div>
+                            <div class="d-flex justify-content-end p-3">
+                                <a href=# class="p-2 btn btn-primary bg-dark disabled">Utilizar ferramenta</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>            
+            </div>
+            <div class="col">
+                <div class="card mb-3">
+                    <div class="row g-0">
+                        <div class="col-md-4">
+                            <img src="../static/home_img/PFC.svg" class="img-fluid rounded-start" alt="...">
+                        </div>
+                        <div class="d-flex flex-column col-md-8">
+                            <div class="card-body">
+                                <h5 class="card-title">Resolução do PFC</h5>
+                                <p class="card-text">Com esta ferramenta Lorem, ipsum dolor sit amet consectetur adipisicing elit. Aut, maiores! Id at debitis earum incidunt harum architecto ea! Inventore molestiae repellat quam quaerat eligendi vel, quod voluptatibus officiis quisquam eaque.</p>                            
+                            </div>
+                            <div class="d-flex justify-content-end p-3">
+                                <a href="{{ url_for('pfc_input') }}" class="p-2 btn btn-primary bg-dark">Utilizar ferramenta</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>            
+            <div class="col">
+                <div class="card mb-3">
+                    <div class="row g-0">
+                        <div class="col-md-4">
+                            <img src="../static/home_img/CC.svg" class="img-fluid rounded-start" alt="...">
+                        </div>
+                        <div class="d-flex flex-column col-md-8">
+                            <div class="card-body">
+                                <h5 class="card-title">Análise de Curto-circuito</h5>
+                                <p class="card-text">Com esta ferramenta Lorem, ipsum dolor sit amet consectetur adipisicing elit. Aut, maiores! Id at debitis earum incidunt harum architecto ea! Inventore molestiae repellat quam quaerat eligendi vel, quod voluptatibus officiis quisquam eaque.</p>                            
+                            </div>
+                            <div class="d-flex justify-content-end p-3">
+                                <a href=# class="p-2 btn btn-primary bg-dark">Utilizar ferramenta</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>            
+            </div>
+            <div class="col">
+                <div class="card mb-3">
+                    <div class="row g-0">
+                        <div class="col-md-4">
+                            <img src="../static/home_img/ABI.svg" class="img-fluid rounded-start" alt="...">
+                        </div>
+                        <div class="d-flex flex-column col-md-8">
+                            <div class="card-body">
+                                <h5 class="card-title">Análise básica de instabilidade</h5>
+                                <p class="card-text">Com esta ferramenta Lorem, ipsum dolor sit amet consectetur adipisicing elit. Aut, maiores! Id at debitis earum incidunt harum architecto ea! Inventore molestiae repellat quam quaerat eligendi vel, quod voluptatibus officiis quisquam eaque.</p>                            
+                            </div>
+                            <div class="d-flex justify-content-end p-3">
+                                <a href=# class="p-2 btn btn-primary bg-dark">Utilizar ferramenta</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>            
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="content-section p-3 m-0">
+                <h3>Barra lateral:</h3>
+                <ul class="list-group">
+                    <li class="list-group-item list-group-item-light">Latest Posts</li>
+                </ul>
+                </p>
+            </div>
+        </div>
+    </div>
+
+{% endblock content %}

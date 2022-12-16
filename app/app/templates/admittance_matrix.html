@@ -1,0 +1,275 @@
+{% extends "layout.html" %}
+{% block content %}     
+    <div class="row mb-3 mx-4 p-0">
+        <div class="container col-md-8 border border-dark rounded py-3 ps-3">
+            <div class="container p-0">
+                <button class="btn btn-dark my-1 w-50 d-flex justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1" aria-expanded="false" aria-controls="collapse1">
+                    Adicionar Impedância Série
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-plus-circle-fill ms-2" viewBox="0 0 16 16">
+                        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3v-3z"/>
+                    </svg>
+                </button>
+                <div class="collapse" id="collapse1">
+                    <div class="card card-body">
+                        <form method="POST" action="" class="px-3">
+                            {{ pu_zs_form.hidden_tag() }}
+                            <fieldset>
+                                
+                                <div class="container input-group p-0">
+                                    <span class="input-group-text w-25">Impedância</span>
+                                    {% if pu_zs_form.series_impedance_mag.errors %}
+                                        {{ pu_zs_form.series_impedance_mag(class="form-control w-75 is-invalid") }}
+                                        <div class="invalid-feedback text-center">
+                                            {% for error in pu_zs_form.series_impedance_mag.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ pu_zs_form.series_impedance_mag(class="form-control w-75") }}
+                                    {% endif %}
+                                </div>
+                                <div class="container input-group p-0">
+                                    <span class="input-group-text w-25">Terminal - 0</span>
+                                    {% if pu_zs_form.t0.errors or pu_zs_form.t1.errors %}
+                                        {{ pu_zs_form.t0(class="form-control w-25 is-invalid") }}
+                                        <span class="input-group-text w-25">Terminal - 1</span>
+                                        {{ pu_zs_form.t1(class="form-control w-25 is-invalid") }}
+                                        <div class="invalid-feedback text-center">
+                                            {% for error in pu_zs_form.t0.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                            {% for error in pu_zs_form.t1.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ pu_zs_form.t0(class="form-control w-25") }}
+                                        <span class="input-group-text w-25">Terminal - 1</span>
+                                        {{ pu_zs_form.t1(class="form-control w-25") }}
+                                    {% endif %}
+                                </div>
+                            </fieldset> 
+                            {{ pu_zs_form.submit_pu_zs_form(class="btn btn-secondary mb-3 w-100") }}
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="container p-0">
+                <button class="btn btn-dark my-1 w-50 d-flex justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2" aria-expanded="false" aria-controls="collapse2">
+                    Adicionar Impedância Shunt
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-plus-circle-fill ms-2" viewBox="0 0 16 16">
+                        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3v-3z"/>
+                    </svg>
+                </button>
+                <div class="collapse" id="collapse2">
+                    <div class="card card-body">
+                        <form method="POST" action="" class="px-3">
+                            {{ pu_zsh_form.hidden_tag() }}
+                            <fieldset>
+                                
+                                <div class="container input-group p-0">
+                                    <span class="input-group-text w-25">Impedância</span>
+                                    {% if pu_zsh_form.shunt_impedance_mag.errors %}
+                                        {{ pu_zsh_form.shunt_impedance_mag(class="form-control w-75 is-invalid") }}
+                                        <div class="invalid-feedback text-center">
+                                            {% for error in pu_zsh_form.shunt_impedance_mag.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ pu_zsh_form.shunt_impedance_mag(class="form-control w-75") }}
+                                    {% endif %}
+                                </div>
+                                <div class="container input-group p-0">
+                                    <span class="input-group-text w-25">Terminal - 1</span>
+                                    {% if pu_zsh_form.t1.errors %}
+                                        {{ pu_zsh_form.t1(class="form-control w-25 is-invalid") }}
+                                        <div class="invalid-feedback text-center">
+                                            {% for error in pu_zsh_form.t1.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ pu_zsh_form.t1(class="form-control w-75") }}
+                                    {% endif %}
+                                </div>
+                            </fieldset> 
+                            {{ pu_zsh_form.submit_pu_zsh_form(class="btn btn-secondary mb-3 w-100") }}
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="container p-0">
+                <button class="btn btn-dark my-1 w-50 d-flex justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3" aria-expanded="false" aria-controls="collapse3">
+                    Adicionar Admitância Série
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-plus-circle-fill ms-2" viewBox="0 0 16 16">
+                        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3v-3z"/>
+                    </svg>
+                </button>
+                <div class="collapse" id="collapse3">
+                    <div class="card card-body">
+                        <form method="POST" action="" class="px-3">
+                            {{ pu_as_form.hidden_tag() }}
+                            <fieldset>
+                                
+                                <div class="container input-group p-0">
+                                    <span class="input-group-text w-25">Admitância</span>
+                                    {% if pu_as_form.series_admittance_mag.errors %}
+                                        {{ pu_as_form.series_admittance_mag(class="form-control w-75 is-invalid") }}
+                                        <div class="invalid-feedback text-center">
+                                            {% for error in pu_as_form.series_admittance_mag.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ pu_as_form.series_admittance_mag(class="form-control w-75") }}
+                                    {% endif %}
+                                </div>
+                                <div class="container input-group p-0">
+                                    <span class="input-group-text w-25">Terminal - 0</span>
+                                    {% if pu_as_form.t0.errors or pu_as_form.t1.errors %}
+                                        {{ pu_as_form.t0(class="form-control w-25 is-invalid") }}
+                                        <span class="input-group-text w-25">Terminal - 1</span>
+                                        {{ pu_as_form.t1(class="form-control w-25 is-invalid") }}
+                                        <div class="invalid-feedback text-center">
+                                            {% for error in pu_as_form.t0.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                            {% for error in pu_as_form.t1.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ pu_as_form.t0(class="form-control w-25") }}
+                                        <span class="input-group-text w-25">Terminal - 1</span>
+                                        {{ pu_as_form.t1(class="form-control w-25") }}
+                                    {% endif %}
+                                </div>
+                            </fieldset> 
+                            {{ pu_as_form.submit_pu_as_form(class="btn btn-secondary mb-3 w-100") }}
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="container p-0">
+                <button class="btn btn-dark my-1 w-50 d-flex justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4" aria-expanded="false" aria-controls="collapse4">
+                    Adicionar Admitância Shunt
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-plus-circle-fill ms-2" viewBox="0 0 16 16">
+                        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3v-3z"/>
+                    </svg>
+                </button>
+                <div class="collapse" id="collapse4">
+                    <div class="card card-body">
+                        <form method="POST" action="" class="px-3">
+                            {{ pu_ash_form.hidden_tag() }}
+                            <fieldset>
+                                
+                                <div class="container input-group p-0">
+                                    <span class="input-group-text w-25">Admitância</span>
+                                    {% if pu_ash_form.shunt_admittance_mag.errors %}
+                                        {{ pu_ash_form.shunt_admittance_mag(class="form-control w-75 is-invalid") }}
+                                        <div class="invalid-feedback text-center">
+                                            {% for error in pu_ash_form.shunt_admittance_mag.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ pu_ash_form.shunt_admittance_mag(class="form-control w-75") }}
+                                    {% endif %}
+                                </div>
+                                <div class="container input-group p-0">
+                                    <span class="input-group-text w-25">Terminal - 1</span>
+                                    {% if pu_ash_form.t1.errors %}
+                                        {{ pu_ash_form.t1(class="form-control w-25 is-invalid") }}
+                                        <div class="invalid-feedback text-center">
+                                            {% for error in pu_ash_form.t1.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ pu_ash_form.t1(class="form-control w-25") }}
+                                    {% endif %}
+                                </div>
+                            </fieldset> 
+                            {{ pu_ash_form.submit_pu_ash_form(class="btn btn-secondary mb-3 w-100") }}
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="container p-0">
+                <button class="btn btn-dark my-1 w-50 d-flex justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#collapse6" aria-expanded="false" aria-controls="collapse6">
+                    Adicionar Problema
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-plus-circle-fill ms-2" viewBox="0 0 16 16">
+                        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3v-3z"/>
+                    </svg>
+                </button>
+                <div class="collapse" id="collapse6">
+                    <div class="card card-body">
+                        <form method="POST" action="" enctype="multipart/form-data" class="px-3">
+                            {{ file_form.hidden_tag() }}
+                            <fieldset>
+                                <div class="form-group">
+                                    {{ file_form.upload_file.label() }}
+                                    {{ file_form.upload_file(class="form-control-file") }}
+                                    {% if file_form.upload_file.errors %}
+                                        {% for error in file_form.upload_file.errors %}
+                                            <span class="text-danger">{{ error }}</span>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </fieldset>
+                            {% if not file_form.submit_file.errors %}
+                                {{ file_form.submit_file(class="btn btn-secondary mb-3 mt-1 w-100") }}
+                            {% else %}
+                                {{ file_form.submit_file(class="btn btn-secondary mb-3 mt-1 w-100 disabled") }}
+                            {% endif %}
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            
+        </div>
+        <div class="col-md-4">
+            <div class="border border-dark rounded pt-3 px-3">
+                <p class="h4 text-center">Componentes do Sistema</p>
+                    {% if component_check %}
+                        {% for a_z_type in form_to_values.struct.values() %}
+                            {% for elements in a_z_type.values() %}
+                                {% for element in elements %}
+                                    {% if element %}
+                                        <div class="dropdown m-0">
+                                            <button id="dropdown" class="btn btn-light border border-dark container-fluid p-0 m-0 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                {{ element.name }} {{ element.id }}
+                                            </button>
+                                            <ul class="dropdown-menu container-fluid" aria-labelledby="dropdown">
+                                                <li class="dropdown-item">
+                                                    {{ element.name }}: {{ element.mag }} nos terminais: {{ element.terminals }}
+                                                </li>   
+                                            </ul>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endfor %}
+                        {% endfor %}
+                    {% endif %}
+                <form method="POST" action="" class="mt-2">
+                    {{ pu_submit_form.hidden_tag() }}
+                    {% if not pu_submit_form.submit_pu_a.errors %}
+                        {{ pu_submit_form.submit_pu_a(class="btn btn-secondary mb-3 w-100") }}
+                    {% else %}
+                        {{ pu_submit_form.submit_pu_a(class="btn btn-secondary mb-3 w-100 disabled") }}
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+
+{% endblock content %}

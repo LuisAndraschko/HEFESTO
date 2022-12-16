@@ -1,0 +1,26 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="row border border-dark rounded px-3 mx-3 my-1">
+  <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          {% for i in a_matrix_class.matrix_iter %}
+            <th scope="col">{{ i + 1 }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for i in a_matrix_class.matrix_iter %}
+          <tr>
+            <th scope="row">{{ i + 1 }}</th>
+              {% for j in a_matrix_class.matrix_iter %}
+                <td>{{ print_template.get_rounded_string(a_matrix_class.a_matrix[i][j]) }}</td>
+              {% endfor %}
+          </tr>
+        {% endfor %}
+      </tbody>
+  </table>
+</div>
+
+{% endblock content %}

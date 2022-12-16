@@ -1,0 +1,592 @@
+{% extends "layout.html" %}
+{% block content %}     
+    <div class="row mb-3 mx-4 p-0">
+        <div class="container col-md-8 border border-dark rounded py-3 ps-3">
+            {% if not component_list %}
+                <div class="container p-0">
+                    <button class="btn btn-dark my-1 w-50 d-flex justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#collapse0" aria-expanded="false" aria-controls="collapse0">
+                        Adicionar Bases do Sistema
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-plus-circle-fill ms-2" viewBox="0 0 16 16">
+                            <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3v-3z"/>
+                        </svg>
+                    </button>
+                    <div class="collapse" id="collapse0">
+                        <div class="card card-body">
+                            <form method="POST" action="" class="px-3">
+                                {{ sb_form.hidden_tag() }}
+                                <fieldset>
+                                    <div class="container input-group p-0">
+                                        <span class="input-group-text w-25">Potência</span>
+                                        {% if sb_form.power_mag.errors %}
+                                            {{ sb_form.power_mag(class="form-control w-25 is-invalid") }}
+                                            {{ sb_form.power_mult(class="form-control w-25 form-select") }}
+                                            {{ sb_form.power_measure(class="form-control w-25 form-select") }}
+                                            <div class="invalid-feedback text-center">
+                                                {% for error in sb_form.power_mag.errors %}
+                                                    <span>{{ error }}</span>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            {{ sb_form.power_mag(class="form-control w-25") }}
+                                            {{ sb_form.power_mult(class="form-control w-25 form-select") }}
+                                            {{ sb_form.power_measure(class="form-control w-25 form-select") }}
+                                        {% endif %}
+                                    </div>
+                                    <div class="container input-group p-0">
+                                        <span class="input-group-text w-25">Tensão</span>
+                                        {% if sb_form.voltage_mag.errors %}
+                                            {{ sb_form.voltage_mag(class="form-control w-25 is-invalid") }}
+                                            {{ sb_form.voltage_mult(class="form-control w-25 form-select") }}
+                                            {{ sb_form.voltage_measure(class="form-control w-25 form-select") }}
+                                            <div class="invalid-feedback text-center">
+                                                {% for error in sb_form.voltage_mag.errors %}
+                                                    <span>{{ error }}</span>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            {{ sb_form.voltage_mag(class="form-control w-25") }}
+                                            {{ sb_form.voltage_mult(class="form-control w-25 form-select") }}
+                                            {{ sb_form.voltage_measure(class="form-control w-25 form-select") }}
+                                        {% endif %}
+                                    </div>
+                                    <div class="container input-group p-0">
+                                        <span class="input-group-text w-25">Barra</span>
+                                        {% if sb_form.bar.errors %}
+                                            {{ sb_form.bar(class="form-control is-invalid") }}
+                                            <div class="invalid-feedback text-center">
+                                                {% for error in sb_form.bar.errors %}
+                                                    <span>{{ error }}</span>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            {{ sb_form.bar(class="form-control") }}
+                                        {% endif %}
+                                    </div>
+                                </fieldset> 
+                                {{ sb_form.submit_sb(class="btn btn-secondary mb-3 w-100") }}
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            <div class="container p-0">
+                <button class="btn btn-dark my-1 w-50 d-flex justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1" aria-expanded="false" aria-controls="collapse1">
+                    Adicionar Gerador
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-plus-circle-fill ms-2" viewBox="0 0 16 16">
+                        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3v-3z"/>
+                    </svg>
+                </button>
+                <div class="collapse" id="collapse1">
+                    <div class="card card-body">
+                        <form method="POST" action="" class="px-3">
+                            {{ gen_form.hidden_tag() }}
+                            <fieldset>
+                                <div class="container input-group p-0">
+                                    <span class="input-group-text w-25">Potência</span>
+                                    {% if gen_form.power_mag.errors %}
+                                        {{ gen_form.power_mag(class="form-control w-25 is-invalid") }}
+                                        {{ gen_form.power_mult(class="form-control w-25 form-select") }}
+                                        {{ gen_form.power_measure(class="form-control w-25 form-select") }}
+                                        <div class="invalid-feedback text-center">
+                                            {% for error in gen_form.power_mag.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ gen_form.power_mag(class="form-control w-25") }}
+                                        {{ gen_form.power_mult(class="form-control w-25 form-select") }}
+                                        {{ gen_form.power_measure(class="form-control w-25 form-select") }}
+                                    {% endif %}
+                                </div>
+                                <div class="container input-group p-0">
+                                    <span class="input-group-text w-25">Tensão</span>
+                                    {% if gen_form.voltage_mag.errors %}
+                                        {{ gen_form.voltage_mag(class="form-control w-25 is-invalid") }}
+                                        {{ gen_form.voltage_mult(class="form-control w-25 form-select") }}
+                                        {{ gen_form.voltage_measure(class="form-control w-25 form-select") }}
+                                        <div class="invalid-feedback text-center">
+                                            {% for error in gen_form.voltage_mag.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ gen_form.voltage_mag(class="form-control w-25") }}
+                                        {{ gen_form.voltage_mult(class="form-control w-25 form-select") }}
+                                        {{ gen_form.voltage_measure(class="form-control w-25 form-select") }}
+                                    {% endif %}
+                                </div>
+                                <div class="container input-group p-0">
+                                    <span class="input-group-text w-25">Impedância</span>
+                                    {% if gen_form.impedance_mag.errors %}
+                                        {{ gen_form.impedance_mag(class="form-control w-25 is-invalid") }}
+                                        {{ gen_form.impedance_mult(class="form-control w-25 form-select") }}
+                                        {{ gen_form.impedance_measure(class="form-control w-25 form-select") }}
+                                        <div class="invalid-feedback text-center">
+                                            {% for error in gen_form.impedance_mag.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ gen_form.impedance_mag(class="form-control w-25") }}
+                                        {{ gen_form.impedance_mult(class="form-control w-25 form-select") }}
+                                        {{ gen_form.impedance_measure(class="form-control w-25 form-select") }}
+                                    {% endif %}
+                                </div>
+                                <div class="container input-group p-0">
+                                    <span class="input-group-text w-25">Barra</span>
+                                    {% if gen_form.t1.errors %}
+                                        {{ gen_form.t1(class="form-control is-invalid") }}
+                                        <div class="invalid-feedback text-center">
+                                            {% for error in gen_form.t1.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ gen_form.t1(class="form-control") }}
+                                    {% endif %}
+                                </div>
+                            </fieldset> 
+                            {% if not sb_form.submit_sb.errors %}
+                                {{ gen_form.submit_gen(class="btn btn-secondary mb-3 w-100") }}
+                            {% else %}
+                                {{ gen_form.submit_gen(class="btn btn-secondary mb-3 w-100 disabled") }}
+                            {% endif %}
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="container p-0">
+                <button class="btn btn-dark my-1 w-50 d-flex justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2" aria-expanded="false" aria-controls="collapse2">
+                    Adicionar Transformador
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-plus-circle-fill ms-2" viewBox="0 0 16 16">
+                        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3v-3z"/>
+                    </svg>
+                </button>
+                <div class="collapse" id="collapse2">
+                    <div class="card card-body">
+                        <form method="POST" action="" class="px-3">
+                            {{ tran_form.hidden_tag() }}
+                            <fieldset>
+                                <div class="container input-group p-0">
+                                    <span class="input-group-text w-25">Potência</span>
+                                    {% if tran_form.power_mag.errors %}
+                                        {{ tran_form.power_mag(class="form-control w-25 is-invalid") }}
+                                        {{ tran_form.power_mult(class="form-control w-25 form-select") }}
+                                        {{ tran_form.power_measure(class="form-control w-25 form-select") }}
+                                        <div class="invalid-feedback text-center">
+                                            {% for error in tran_form.power_mag.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ tran_form.power_mag(class="form-control w-25") }}
+                                        {{ tran_form.power_mult(class="form-control w-25 form-select") }}
+                                        {{ tran_form.power_measure(class="form-control w-25 form-select") }}
+                                    {% endif %}
+                                </div>
+                                <div class="container input-group p-0">
+                                    <span class="input-group-text w-25">Alta Tensão</span>
+                                    {% if tran_form.high_voltage_mag.errors %}
+                                        {{ tran_form.high_voltage_mag(class="form-control w-25 is-invalid") }}
+                                        {{ tran_form.high_voltage_mult(class="form-control w-25 form-select") }}
+                                        {{ tran_form.high_voltage_measure(class="form-control w-25 form-select") }}
+                                        <div class="invalid-feedback text-center">
+                                            {% for error in tran_form.high_voltage_mag.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ tran_form.high_voltage_mag(class="form-control w-25") }}
+                                        {{ tran_form.high_voltage_mult(class="form-control w-25 form-select") }}
+                                        {{ tran_form.high_voltage_measure(class="form-control w-25 form-select") }}
+                                    {% endif %}
+                                </div>
+                                <div class="container input-group p-0">
+                                    <span class="input-group-text w-25">Baixa Tensão</span>
+                                    {% if tran_form.low_voltage_mag.errors %}
+                                        {{ tran_form.low_voltage_mag(class="form-control w-25 is-invalid") }}
+                                        {{ tran_form.low_voltage_mult(class="form-control w-25 form-select") }}
+                                        {{ tran_form.low_voltage_measure(class="form-control w-25 form-select") }}
+                                        <div class="invalid-feedback text-center">
+                                            {% for error in tran_form.low_voltage_mag.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ tran_form.low_voltage_mag(class="form-control w-25") }}
+                                        {{ tran_form.low_voltage_mult(class="form-control w-25 form-select") }}
+                                        {{ tran_form.low_voltage_measure(class="form-control w-25 form-select") }}
+                                    {% endif %}
+                                </div>
+                                <div class="container input-group p-0">
+                                    <span class="input-group-text w-25">Impedância</span>
+                                    {% if tran_form.impedance_mag.errors %}
+                                        {{ tran_form.impedance_mag(class="form-control w-25 is-invalid") }}
+                                        {{ tran_form.impedance_mult(class="form-control w-25 form-select") }}
+                                        {{ tran_form.impedance_measure(class="form-control w-25 form-select") }}
+                                        <div class="invalid-feedback text-center">
+                                            {% for error in tran_form.impedance_mag.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ tran_form.impedance_mag(class="form-control w-25") }}
+                                        {{ tran_form.impedance_mult(class="form-control w-25 form-select") }}
+                                        {{ tran_form.impedance_measure(class="form-control w-25 form-select") }}
+                                    {% endif %}
+                                </div>
+                                <div class="container input-group p-0">
+                                    <span class="input-group-text w-25">Terminal Alta</span>
+                                    {% if tran_form.t0.errors or tran_form.t1.errors %}
+                                        {{ tran_form.t0(class="form-control w-25 is-invalid") }}
+                                        <span class="input-group-text w-25">Terminal Baixa</span>
+                                        {{ tran_form.t1(class="form-control w-25 is-invalid") }}
+                                        <div class="invalid-feedback text-center">
+                                            {% for error in tran_form.t0.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                            {% for error in tran_form.t1.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ tran_form.t0(class="form-control w-25") }}
+                                        <span class="input-group-text w-25">Terminal Baixa</span>
+                                        {{ tran_form.t1(class="form-control w-25") }}
+                                    {% endif %}
+                                </div>
+                            </fieldset>
+                            {% if not sb_form.submit_sb.errors %}
+                                {{ tran_form.submit_tran(class="btn btn-secondary mb-3 w-100") }} 
+                            {% else %}
+                                {{ tran_form.submit_tran(class="btn btn-secondary mb-3 w-100 disabled") }} 
+                            {% endif %}
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="container p-0">
+                <button class="btn btn-dark my-1 w-50 d-flex justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3" aria-expanded="false" aria-controls="collapse3">
+                    Adicionar Linha de Trasmissão Curta
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-plus-circle-fill ms-2" viewBox="0 0 16 16">
+                        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3v-3z"/>
+                    </svg>
+                </button>
+                <div class="collapse" id="collapse3">
+                    <div class="card card-body">
+                        <form method="POST" action="" class="px-3">
+                            {{ short_tline_form.hidden_tag() }}
+                            <fieldset>
+                                <div class="container input-group p-0">
+                                    <span class="input-group-text w-25">Impedância</span>
+                                    {% if short_tline_form.series_impedance_mag.errors %}
+                                        {{ short_tline_form.series_impedance_mag(class="form-control w-25 is-invalid") }}
+                                        {{ short_tline_form.series_impedance_mult(class="form-control w-25 form-select") }}
+                                        {{ short_tline_form.series_impedance_measure(class="form-control w-25 form-select") }}
+                                        <div class="invalid-feedback text-center">
+                                            {% for error in short_tline_form.series_impedance_mag.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ short_tline_form.series_impedance_mag(class="form-control w-25") }}
+                                        {{ short_tline_form.series_impedance_mult(class="form-control w-25 form-select") }}
+                                        {{ short_tline_form.series_impedance_measure(class="form-control w-25 form-select") }}
+                                    {% endif %}
+                                </div>
+                                <div class="container input-group p-0">
+                                    <span class="input-group-text w-25">Terminal</span>
+                                    {% if short_tline_form.t0.errors or short_tline_form.t1.errors %}
+                                        {{ short_tline_form.t0(class="form-control w-25 is-invalid") }}
+                                        <span class="input-group-text w-25">Terminal</span>
+                                        {{ short_tline_form.t1(class="form-control w-25 is-invalid") }}
+                                        <div class="invalid-feedback text-center">
+                                            {% for error in short_tline_form.t0.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                            {% for error in short_tline_form.t1.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ short_tline_form.t0(class="form-control w-25") }}
+                                        <span class="input-group-text w-25">Terminal</span>
+                                        {{ short_tline_form.t1(class="form-control w-25") }}
+                                    {% endif %}
+                                </div>
+                                <div class="container input-group p-0">
+                                    <span class="input-group-text w-25">Comprimento</span>
+                                    {% if short_tline_form.lenght.errors %}
+                                        {{ short_tline_form.lenght(class="form-control is-invalid") }}
+                                        <div class="invalid-feedback text-center">
+                                            {% for error in short_tline_form.lenght.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ short_tline_form.lenght(class="form-control") }}
+                                    {% endif %}
+                                </div>
+                            </fieldset>
+                            {% if not sb_form.submit_sb.errors %}
+                                {{ short_tline_form.submit_stl(class="btn btn-secondary mb-3 w-100") }} 
+                            {% else %}
+                                {{ short_tline_form.submit_stl(class="btn btn-secondary mb-3 w-100 disabled") }} 
+                            {% endif %}
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="container p-0">
+                <button class="btn btn-dark my-1 w-50 d-flex justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4" aria-expanded="false" aria-controls="collapse4">
+                    Adicionar Linha de Trasmissão Média
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-plus-circle-fill ms-2" viewBox="0 0 16 16">
+                        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3v-3z"/>
+                    </svg>
+                </button>
+                <div class="collapse" id="collapse4">
+                    <div class="card card-body">
+                        <form method="POST" action="" class="px-3">
+                            {{ medium_tline_form.hidden_tag() }}
+                            <fieldset>
+                                <div class="container input-group p-0">
+                                    <span class="input-group-text w-25">Impedância Série</span>
+                                    {% if medium_tline_form.series_impedance_mag.errors %}
+                                        {{ medium_tline_form.series_impedance_mag(class="form-control w-25 is-invalid") }}
+                                        {{ medium_tline_form.series_impedance_mult(class="form-control w-25 form-select") }}
+                                        {{ medium_tline_form.series_impedance_measure(class="form-control w-25 form-select") }}
+                                        <div class="invalid-feedback text-center">
+                                            {% for error in medium_tline_form.series_impedance_mag.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ medium_tline_form.series_impedance_mag(class="form-control w-25") }}
+                                        {{ medium_tline_form.series_impedance_mult(class="form-control w-25 form-select") }}
+                                        {{ medium_tline_form.series_impedance_measure(class="form-control w-25 form-select") }}
+                                    {% endif %}
+                                </div>
+                                <div class="container input-group p-0">
+                                    <span class="input-group-text w-25">Impedância Shunt</span>
+                                    {% if medium_tline_form.shunt_impedance_mag.errors %}
+                                        {{ medium_tline_form.shunt_impedance_mag(class="form-control w-25 is-invalid") }}
+                                        {{ medium_tline_form.shunt_impedance_mult(class="form-control w-25 form-select") }}
+                                        {{ medium_tline_form.shunt_impedance_measure(class="form-control w-25 form-select") }}
+                                        <div class="invalid-feedback text-center">
+                                            {% for error in medium_tline_form.shunt_impedance_mag.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ medium_tline_form.shunt_impedance_mag(class="form-control w-25") }}
+                                        {{ medium_tline_form.shunt_impedance_mult(class="form-control w-25 form-select") }}
+                                        {{ medium_tline_form.shunt_impedance_measure(class="form-control w-25 form-select") }}
+                                    {% endif %}
+                                </div>
+                                <div class="container input-group p-0">
+                                    <span class="input-group-text w-25">Terminal</span>
+                                    {% if medium_tline_form.t0.errors or medium_tline_form.t1.errors %}
+                                        {{ medium_tline_form.t0(class="form-control w-25 is-invalid") }}
+                                        <span class="input-group-text w-25">Terminal</span>
+                                        {{ medium_tline_form.t1(class="form-control w-25 is-invalid") }}
+                                        <div class="invalid-feedback text-center">
+                                            {% for error in medium_tline_form.t0.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                            {% for error in medium_tline_form.t1.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ medium_tline_form.t0(class="form-control w-25") }}
+                                        <span class="input-group-text w-25">Terminal</span>
+                                        {{ medium_tline_form.t1(class="form-control w-25") }}
+                                    {% endif %}
+                                </div>
+                                <div class="container input-group p-0">
+                                    <span class="input-group-text w-25">Comprimento</span>
+                                    {% if medium_tline_form.lenght.errors %}
+                                        {{ medium_tline_form.lenght(class="form-control is-invalid") }}
+                                        <div class="invalid-feedback text-center">
+                                            {% for error in medium_tline_form.lenght.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ medium_tline_form.lenght(class="form-control") }}
+                                    {% endif %}
+                                </div>
+                            </fieldset>
+                            {% if not sb_form.submit_sb.errors %}
+                                {{ medium_tline_form.submit_mtl(class="btn btn-secondary mb-3 w-100") }} 
+                            {% else %}
+                                {{ medium_tline_form.submit_mtl(class="btn btn-secondary mb-3 w-100 disabled") }} 
+                            {% endif %}
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="container p-0">
+                <button class="btn btn-dark w-50 d-flex justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#collapse5" aria-expanded="false" aria-controls="collapse5">
+                    Adicionar Carga
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-plus-circle-fill ms-2" viewBox="0 0 16 16">
+                        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3v-3z"/>
+                    </svg>
+                </button>
+                <div class="collapse" id="collapse5">
+                    <div class="card card-body">
+                        <form method="POST" action="" class="px-3">
+                            {{ load_form.hidden_tag() }}
+                            <fieldset>
+                                <div class="container input-group p-0">
+                                    <span class="input-group-text w-25">Potência</span>
+                                    {% if load_form.power_mag.errors %}
+                                        {{ load_form.power_mag(class="form-control w-25 is-invalid") }}
+                                        {{ load_form.power_mult(class="form-control w-25 form-select") }}
+                                        {{ load_form.power_measure(class="form-control w-25 form-select") }}
+                                        <div class="invalid-feedback text-center">
+                                            {% for error in load_form.power_mag.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ load_form.power_mag(class="form-control w-25") }}
+                                        {{ load_form.power_mult(class="form-control w-25 form-select") }}
+                                        {{ load_form.power_measure(class="form-control w-25 form-select") }}
+                                    {% endif %}
+                                </div>
+                                <div class="container input-group p-0">
+                                    <span class="input-group-text w-25">Fator de Potência</span>
+                                    {% if load_form.power_factor_mag.errors %}
+                                        {{ load_form.power_factor_mag(class="form-control is-invalid") }}
+                                        {{ load_form.power_factor_characteristic(class="form-control form-select") }}
+                                        <div class="invalid-feedback text-center">
+                                            {% for error in load_form.power_factor_mag.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ load_form.power_factor_mag(class="form-control") }}
+                                        {{ load_form.power_factor_characteristic(class="form-control form-select") }}
+                                    {% endif %}
+                                </div>
+                                <div class="container input-group p-0">
+                                    <span class="input-group-text w-25">Barra</span>
+                                    {% if load_form.t1.errors %}
+                                        {{ load_form.t1(class="form-control is-invalid") }}
+                                        <div class="invalid-feedback text-center">
+                                            {% for error in load_form.t1.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ load_form.t1(class="form-control") }}
+                                    {% endif %}
+                                </div>
+                            </fieldset>
+                            {% if not sb_form.submit_sb.errors %}
+                                {{ load_form.submit_ld(class="btn btn-secondary mb-3 w-100") }}
+                            {% else %}
+                                {{ load_form.submit_ld(class="btn btn-secondary mb-3 w-100 disabled") }}
+                            {% endif %}
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% if not component_list %}
+                <div class="container p-0">
+                    <button class="btn btn-dark my-1 w-50 d-flex justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#collapse6" aria-expanded="false" aria-controls="collapse6">
+                        Adicionar Problema
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-plus-circle-fill ms-2" viewBox="0 0 16 16">
+                            <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3v-3z"/>
+                        </svg>
+                    </button>
+                    <div class="collapse" id="collapse6">
+                        <div class="card card-body">
+                            <form method="POST" action="" enctype="multipart/form-data" class="px-3">
+                                {{ file_form.hidden_tag() }}
+                                <fieldset>
+                                    <div class="form-group">
+                                        {{ file_form.upload_file.label() }}
+                                        {{ file_form.upload_file(class="form-control-file") }}
+                                        {% if file_form.upload_file.errors %}
+                                            {% for error in file_form.upload_file.errors %}
+                                                <span class="text-danger">{{ error }}</span>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                </fieldset>
+                                {% if not file_form.submit_file.errors %}
+                                    {{ file_form.submit_file(class="btn btn-secondary mb-3 mt-1 w-100") }}
+                                {% else %}
+                                    {{ file_form.submit_file(class="btn btn-secondary mb-3 mt-1 w-100 disabled") }}
+                                {% endif %}
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+        <div class="col-md-4">
+            <div class="border border-dark rounded pt-3 px-3">
+                <p class="h4 text-center">Componentes do Sistema</p>
+                {% if component_list %}
+                    {% for component in component_list %}
+                        <div class="dropdown m-0">
+                            <button id="dropdown" class="btn btn-light border border-dark container-fluid p-0 m-0 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                {{ component.name }} {{ component.id }}
+                            </button>
+                            <ul class="dropdown-menu container-fluid" aria-labelledby="dropdown">
+                                {% for attr, value in component.__dict__.items() %}
+                                    {% if value.name == 'Potência' %}
+                                        <li class="dropdown-item">
+                                            Potência: 
+                                            {{ value.mag }}{{ value.multiplier }}{{ value.measurement_unit }}
+                                        </li>
+                                    {% endif %}
+                                    {% if value.name == 'Fator de Potência' %}
+                                        <li class="dropdown-item">
+                                            Fator de Potência: 
+                                            {{ value.pf }} {{ value.characteristic }}
+                                        </li>
+                                    {% endif %}
+                                    {% if value is mapping %}
+                                        {% if value['nominal'].name == 'Potência' %}
+                                            <li class="dropdown-item">
+                                                Potência: 
+                                                {{ value['nominal'].mag }}{{ value['nominal'].multiplier }}{{ value['nominal'].measurement_unit }}
+                                            </li>
+                                        {% endif %}
+                                        {% if value['nominal'].name == 'Tensão' %}
+                                            <li class="dropdown-item">
+                                                Tensão: 
+                                                {{ value['nominal'].mag }}{{ value['nominal'].multiplier }}{{ value['nominal'].measurement_unit }}
+                                                na barra: {{ value['nominal'].bar }}
+                                            </li>
+                                        {% endif %}
+                                        {% if value['nominal'].name == 'Impedância' %}
+                                            <li class="dropdown-item">
+                                                Impedância: 
+                                                {{ value['nominal'].mag }}{{ value['nominal'].multiplier }}{{ value['nominal'].measurement_unit }}
+                                                do tipo: {{ value['nominal'].characteristic }}
+                                            </li>
+                                        {% endif %} 
+                                    {% endif %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                <form method="POST" action="" class="mt-2">
+                    {{ pu_form.hidden_tag() }}
+                    {% if not sb_form.submit_sb.errors %}
+                        {{ pu_form.submit_pu(class="btn btn-secondary mb-3 w-100") }}
+                    {% else %}
+                        {{ pu_form.submit_pu(class="btn btn-secondary mb-3 w-100 disabled") }}
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+
+{% endblock content %}
