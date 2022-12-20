@@ -8,590 +8,11 @@ import copy as cp
 import pandas as pd
 from IPython.display import display
 import pandas as pd
-from IPython.display import display
-
-##################################################### Operations ######################################################
-class DefaultDictFormat():
-    """This class is responsable for hosting the static method get_dict_struct."""
-    @staticmethod
-    def get_dict_struct(nominal, base=None):
-        """This method returns a dictionary in the following structure: {'nominal': nominal, 'base': None, 'pu': None} when just the nominal parameter is given and the folowing: {'nominal': nominal, 'base': Base, 'pu': None} when the optional parameter is given.
-
-        :param nominal: Object to be used as value under the key 'nominal'.
-        :type nominal: Object can be a instance of 1 of these 3: Voltage(), Impedance() or Power().
-        :param base: When parameter nominal is an instance of Power() the base is given as the system power base, defaults to None.
-        :type base: Power(), optional.
-        :return: Dictionary as described in method description .
-        :rtype: Dict.
-        """
-        keys = ['nominal', 'base', 'pu']
-        struct = {key: None for key in keys}
-        struct['nominal'] = nominal
-        if base is not None:
-            struct['base'] = base
-        return struct
-
-
-class MagConversion():
-    """This class is responsable for converting to and from engineering notation with the methods: get_value() and get_eng_notation().
-    """
-    def __init__(self) -> None:
-        """Constructor method. Atributtes predetermined dictionary to instance variable multipliers.
-        """
-        self.multipliers = {
-            'p': pow(10, -12),
-            'n': pow(10, -9),
-            'u': pow(10, -6),
-            'm': pow(10, -3),
-            '': pow(10, 0),
-            'k': pow(10, 3),
-            'M': pow(10, 6),
-            'G': pow(10, 9),
-            'T': pow(10, 12),
-            '%': pow(10, -2),
-            '1/%': pow(10, 2)
-        }
-
-
-    def get_value(self, eng_notation):
-        """Returns the corresponding float value given a dict with the key 'nominal' and object in value field with the attribute .multiplier which should correspond with this class instance attribute .multipliers.
-
-        :param eng_notation: Received dict with object of type Voltage(), Impedance() or Power() in the format: {'nominal': object, ...}.
-        :type eng_notation: Dict.
-        :return: A float corresponding to the given engineering notetion.
-        :rtype: float.
-        """       
-        if isinstance(eng_notation, dict):
-            if pd.isnull(eng_notation['nominal'].multiplier):
-                eng_notation['nominal'].multiplier = ''
-            return self.multipliers[eng_notation['nominal'].multiplier] * eng_notation['nominal'].mag
-        else:
-            if pd.isnull(eng_notation.multiplier):
-                eng_notation.multiplier = ''
-            return self.multipliers[eng_notation.multiplier] * eng_notation.mag
-
-    def get_eng_notation(self, value):
-        """Returns the engineering notation of a given value in the form of a tuple where the 1st element is the string representing the multiplier in the notation and the 2nd element the value associated with the multiplier.
-
-        :param value: A float or int to be converted to engineering notation.
-        :type value: float, int.
-        :return: A tuple containg like (multiplier, value).
-        :rtype: (str, float).
-        """
-        for multiplier, meq in self.multipliers.items():
-            if value / meq >= 1 and value / meq < 1000:
-                return (value / meq, multiplier)
-
-    def get_inverse_multiplier(self, multiplier):  
-        if pd.isnull(multiplier):
-            return ''
-        inv_m_value = pow(self.multipliers[multiplier], -1)
-        for key, value in self.multipliers.items():
-            if inv_m_value == value:
-                return key
-
-
-class InvertValue():
-    @staticmethod
-    def nominal(struct):
-        d = DefaultDictFormat()
-        mc = MagConversion()
-        inverted_mag = pow(struct['nominal'].mag, -1)
-        inverted_multiplier = mc.get_inverse_multiplier(struct['nominal'].multiplier)
-        return (inverted_mag, inverted_multiplier)
-
-
-# class ConvertZY():
-#     @staticmethod
-#     def z2y(instance, impedance):
-#         inv_value = InvertValue().nominal(impedance)
-#         instance.admittance
-#         (inverted_mag, inverted_multiplier)
-# ##################################################### Objects ##########################################################
-##################################################### Números ##########################################################
-class Primitives():
-    def __init__(self, mag, multiplier, measurement_unit, lenght, cnx_type) -> None:
-        self.mag = mag
-        self.multiplier = multiplier
-        self.measurement_unit = measurement_unit
-        self.lenght = lenght
-        self.cnx_type = cnx_type
-
-    def set_mag(self, mag):
-        self.mag = mag
-
-    def set_multiplier(self, multiplier):
-        self.multiplier = multiplier
-
-    def set_measurement_unit(self, measurement_unit):
-        self.measurement_unit = measurement_unit
-
-    def set_cnx_type(self, cnx_type):
-        self.cnx_type = cnx_type
-
-    def check_format(self):
-        """This method checks if the Impedance was specified as a distributed parameter, if It has this method converts to a concentrated parameter aproprieate for calculations.
-        """
-        if self.measurement_unit == 'ohm/km':
-            self.mag *= self.lenght
-            self.measurement_unit = 'ohm'
-        elif self.measurement_unit == 'kohm*km':
-            if self.mag.imag > 0:
-                self.mag = -self.mag * 1000 / self.lenght
-            else:
-                self.mag = self.mag * 1000 / self.lenght
-            self.measurement_unit = 'ohm'
-        
-
-class Power(Primitives):
-    """This class represents the eletric characteristic know as power.
-
-    :param Number: Object from which to inherit common characteristics.
-    :type Number: Number().
-    """
-
-    def __init__(self, mag=None, multiplier=None, measurement_unit=None, lenght=None, cnx_type=None) -> None:
-        """Constructor method. Same parameters as parent class.
-
-        :param mag: Magnitude of power in engineering notation.
-        :type mag: float or int.
-        :param multiplier: String representing the multiplier in engineering notation.
-        :type multiplier: str.
-        :param measurement_unit: Power can be specified in 'W' or 'VA'. This parameters specifies which one.
-        :type measurement_unit: str.
-        """
-        super().__init__(mag, multiplier, measurement_unit, lenght, cnx_type)
-        self.name = 'Potência'
-
-
-class Voltage(Primitives):
-    """This class represents the eletric characteristic know as voltage.
-
-    :param Number: Object from which to inherit common characteristics.
-    :type Number: Number().
-    """
-    def __init__(self, mag=None, multiplier=None, measurement_unit=None, lenght=None, cnx_type=None) -> None:
-        """Constructor method. Same parameters as parent class.
-
-        :param mag: Magnitude of power in engineering notation.
-        :type mag: float or int.
-        :param multiplier: String representing the multiplier in engineering notation.
-        :type multiplier: str.
-        :param measurement_unit: Power can be specified in 'W' or 'VA'. This parameters specifies which one.
-        :type measurement_unit: str.
-        """
-        self.name = 'Tensão'
-        super().__init__(mag, multiplier, measurement_unit, lenght, cnx_type)
-
-
-class Impedance(Primitives):
-    """This class represents the eletric characteristic know as impedance.
-
-    :param Number: Object from which to inherit common characteristics.
-    :type Number: Number().
-    """
-    def __init__(self, mag=None, multiplier=None, measurement_unit=None, lenght=None, cnx_type=None) -> None:
-        """Constructor method. Same parameters as parent class.
-
-        :param mag: Magnitude of power in engineering notation.
-        :type mag: float or int.
-        :param multiplier: String representing the multiplier in engineering notation.
-        :type multiplier: str.
-        :param measurement_unit: Power can be specified in 'W' or 'VA'. This parameters specifies which one.
-        :type measurement_unit: str.
-        """
-        self.name = 'Impedância'
-        super().__init__(mag, multiplier, measurement_unit, lenght, cnx_type)
-        self.check_format()
-
-
-class Admittance(Primitives):
-    """This class represents the eletric characteristic know as impedance.
-
-    :param Number: Object from which to inherit common characteristics.
-    :type Number: Number().
-    """
-    def __init__(self, mag=None, multiplier=None, measurement_unit=None, lenght=None, cnx_type=None) -> None:
-        """Constructor method. Same parameters as parent class.
-
-        :param mag: Magnitude of power in engineering notation.
-        :type mag: float or int.
-        :param multiplier: String representing the multiplier in engineering notation.
-        :type multiplier: str.
-        :param measurement_unit: Power can be specified in 'W' or 'VA'. This parameters specifies which one.
-        :type measurement_unit: str.
-        """
-        self.name = 'Admitância'
-        super().__init__(mag, multiplier, measurement_unit, lenght, cnx_type)
-        self.check_format()
-
-##################################################### Elementos ##########################################################
-
-class Components():
-    def __init__(self, terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic) -> None:
-        self.terminals = terminals
-        self.impedance = impedance
-        self.admittance = admittance
-        self.power = power
-        self.voltage_t0 = voltage_t0
-        self.voltage_t1 = voltage_t1
-        self.pf = pf
-        self.characteristic = characteristic
-
-    def set_terminals(self, terminals):
-        self.terminals = terminals
-
-    def set_impedance(self, key, impedance):
-        self.impedance[key] = impedance
-
-    def set_admittance(self, key, admittance):
-        self.admittance[key] = admittance
-        
-    def set_power(self, key, power):
-        self.power = power[key]
-
-    def set_voltage_t0(self, key, voltage_t0):
-        self.voltage_t0[key] = voltage_t0
-
-    def set_voltage_t1(self, key, voltage_t1):
-        self.voltage_t1[key] = voltage_t1
-
-    def set_pf(self, pf):
-        self.pf = pf
-
-    def set_characteristic(self, characteristic):
-        self.characteristic = characteristic
-
-
-class Generators(Components):
-    """This class models the eletric component of eletric power systems know as generator.
-    """
-    instances = []
-
-    def add_instance(self):
-        Generators.instances.append(self)
-
-    def __init__(self, terminals=None, impedance=None,
-                 power=None, voltage_t0=None, voltage_t1=None, pf=None, characteristic=None, admittance=None) -> None:
-        """Constructor method.
-
-        :param impedance: A generator is modeled as having a series impedance. This parameter specifies the impedance chacteristics.
-        :type impedance: dict {'nominal': Impedance(), 'base': None, 'pu': None}.
-        :param terminals: A generator has a pair of terminals for this representation. This parameter specifies them.
-        :type terminals: tuple.
-        :param power: A generator has a nominal power, when is of interest this parameter specifies that, defaults to None.
-        :type power: Power(), optional.
-        :param voltage: A generator has a nominal voltage, when is of interest this parameter specifies that, defaults to None.
-        :type voltage: dict {'nominal': Voltage(), 'base': None, 'pu': None}, optional.
-        """
-        self.name = 'Gerador'
-        super().__init__(terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic)
-        self.add_instance()
-     
-    @classmethod
-    def del_instances(cls):
-        cls.instances = []
-
-
-class Transformers(Components):
-    """This class models the eletric component of eletric power systems know as transformer.
-    """
-    instances = []
-
-    def add_instance(self):
-        Transformers.instances.append(self)
-    
-    def __init__(self, terminals=None, impedance=None,
-                 power=None, voltage_t0=None, voltage_t1=None, pf=None, characteristic=None, admittance=None) -> None:
-        """Constructor method.
-
-        :param impedance: A generator is modeled as having a series impedance. This parameter specifies the impedance chacteristics.
-        :type impedance: dict {'nominal': Impedance(), 'base': None, 'pu': None}.
-        :param terminals: A generator has a pair of terminals for this representation. This parameter specifies them.
-        :type terminals: tuple.
-        :param power: A generator has a nominal power, when is of interest this parameter specifies that, defaults to None.
-        :type power: Power(), optional.
-        :param voltage: A generator has a nominal voltage, when is of interest this parameter specifies that, defaults to None.
-        :type voltage: dict {'nominal': Voltage(), 'base': None, 'pu': None}, optional.
-        """
-        self.name = 'Transformador'
-        super().__init__(terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic)
-        self.add_instance()
-
-    @classmethod
-    def del_instances(cls):
-        cls.instances = []
-
-
-class ShortTLines(Components):
-    """This class models the eletric component of eletric power systems know as short transmission line.
-    """
-    instances = []
-
-    def add_instance(self):
-        ShortTLines.instances.append(self)
-    
-    def __init__(self, terminals=None, impedance=None, admittance=None,
-                 power=None, voltage_t0=None, voltage_t1=None, pf=None, characteristic=None) -> None:
-        """Constructor method.
-
-        :param impedance: A generator is modeled as having a series impedance. This parameter specifies the impedance chacteristics.
-        :type impedance: dict {'nominal': Impedance(), 'base': None, 'pu': None}.
-        :param terminals: A generator has a pair of terminals for this representation. This parameter specifies them.
-        :type terminals: tuple.
-        :param power: A generator has a nominal power, when is of interest this parameter specifies that, defaults to None.
-        :type power: Power(), optional.
-        :param voltage: A generator has a nominal voltage, when is of interest this parameter specifies that, defaults to None.
-        :type voltage: dict {'nominal': Voltage(), 'base': None, 'pu': None}, optional.
-        """
-        self.name = 'Linha de Transmissão Pequena'
-        super().__init__(terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic)
-        self.add_instance()
-
-    @classmethod
-    def del_instances(cls):
-        cls.instances = []
-
-
-class MediumTLines(Components):
-    """This class models the eletric component of eletric power systems know as medium transmission line.
-    """
-    instances = []
-
-    def add_instance(self):
-        MediumTLines.instances.append(self)
-    
-    def __init__(self, terminals=None, impedance=None, admittance=None,
-                 power=None, voltage_t0=None, voltage_t1=None, pf=None, characteristic=None) -> None:
-        """Constructor method.
-
-        :param impedance: A generator is modeled as having a series impedance. This parameter specifies the impedance chacteristics.
-        :type impedance: dict {'nominal': Impedance(), 'base': None, 'pu': None}.
-        :param terminals: A generator has a pair of terminals for this representation. This parameter specifies them.
-        :type terminals: tuple.
-        :param power: A generator has a nominal power, when is of interest this parameter specifies that, defaults to None.
-        :type power: Power(), optional.
-        :param voltage: A generator has a nominal voltage, when is of interest this parameter specifies that, defaults to None.
-        :type voltage: dict {'nominal': Voltage(), 'base': None, 'pu': None}, optional.
-        """
-        self.name = 'Linha de Trasmissão Média'
-        super().__init__(terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic)
-        self.add_instance()
-
-    @classmethod
-    def del_instances(cls):
-        cls.instances = []
-
-
-class Loads(Components):
-    """This class models the eletric component of eletric power systems know as load.
-    """
-    instances = []
-
-    def add_instance(self):
-        Loads.instances.append(self)
-    
-    def __init__(self, terminals=None, power=None, pf=None, characteristic=None, impedance=None, admittance=None, voltage_t0=None, voltage_t1=None) -> None:
-        """Constructor method.
-
-        :param impedance: A generator is modeled as having a series impedance. This parameter specifies the impedance chacteristics.
-        :type impedance: dict {'nominal': Impedance(), 'base': None, 'pu': None}.
-        :param terminals: A generator has a pair of terminals for this representation. This parameter specifies them.
-        :type terminals: tuple.
-        :param power: A generator has a nominal power, when is of interest this parameter specifies that, defaults to None.
-        :type power: Power(), optional.
-        :param voltage: A generator has a nominal voltage, when is of interest this parameter specifies that, defaults to None.
-        :type voltage: dict {'nominal': Voltage(), 'base': None, 'pu': None}, optional.
-        """
-        self.name = 'Carga'
-        super().__init__(terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic)
-        self.add_instance()
-
-    @classmethod
-    def del_instances(cls):
-        cls.instances = []
-
-
-##################################################### Elementos ##########################################################
-class Bars():
-    """This class models the eletric element of eletric power systems know as bar.
-    """
-    instances = []
-
-    @classmethod
-    def get_bars(cls):
-        return cls.instances
-
-    def add_instance(self):
-        Bars.instances.append(self)
-    
-    def __init__(self, id=None, bar_type=None, adjacents=None, isVisited=None, voltage=None, 
-                active_power_in=None, reactive_power_in=None) -> None:
-        """Constructor method.
-        """
-        self.id = id
-        self.name = 'Barra'
-        self.bar_type = bar_type
-        self.adjacents = adjacents
-        self.isVisited = isVisited
-        self.voltage = voltage
-        self.active_power_in = active_power_in
-        self.reactive_power_in = reactive_power_in
-        self.check_existance()
-
-    def check_existance(self):
-        exist = False
-        for bar in Bars.instances:
-            if self.id == bar.id:
-                exist = True
-        if not exist:
-            self.add_instance()
-                
-    def set_id(self, id) -> None:
-        """This method sets the instance attribute id with given parameter.
-
-        :param id: Identifier for the bar.
-        :type id: int.
-        """
-        self.id = id
-
-    def set_bar_type(self, bar_type) -> None:
-        """This method sets the instance attribute id with given parameter.
-
-        :param id: Identifier for the bar.
-        :type id: int.
-        """
-        self.bar_type = bar_type
-
-    def set_adjacent(self, components) -> None:
-        """This method sets a list of adjacent bars to each bar.
-
-        :param components: A list of the given eletric components .
-        :type components: [Generators(), Transformers(), ShortTLines(), MediumTLines(), Loads()] or any combination of these objects.
-        """
-        self.adjacents = []
-        for component in components:
-            if self.id in component.terminals:
-                if self.id != component.terminals[0]:
-                    self.adjacents.append(component.terminals[0])
-                else:
-                     self.adjacents.append(component.terminals[1])
-
-    def set_isVisited(self, isVisited) -> None:
-        """This method sets the instance attribute id with given parameter.
-
-        :param id: Identifier for the bar.
-        :type id: int.
-        """
-        self.isVisited = isVisited
-
-    def set_voltage(self, voltage) -> None:
-        """This method sets the instance attribute id with given parameter.
-
-        :param id: Identifier for the bar.
-        :type id: int.
-        """
-        self.voltage = voltage
-
-    def set_active_power_in(self, active_power_in) -> None:
-        """This method sets the instance attribute id with given parameter.
-
-        :param id: Identifier for the bar.
-        :type id: int.
-        """
-        self.active_power_in = active_power_in
-
-    def set_reactive_power_in(self, reactive_power_in) -> None:
-        """This method sets the instance attribute id with given parameter.
-
-        :param id: Identifier for the bar.
-        :type id: int.
-        """
-        self.reactive_power_in = reactive_power_in
-
-    def set_voltages(self, components, bars) -> None:
-        """This method works recursively in order to visit all bars and set their base voltage.
-
-        :param components: A list of the given eletric components .
-        :type components: [Generators(), Transformers(), ShortTLines(), MediumTLines(), Loads()] or any combination of these objects.
-        :param bars: A list with all the instances of Bars().
-        :type bars: [Bar(1st instance), Bars(2nd instance), ...].
-        :return: Since this is a recursive method it returns itself ultil reaches a base case.
-        :rtype: itself
-        """
-        aux = self 
-        while(aux != None):
-            aux.isVisited = True
-            for adjacent in aux.adjacents:
-                if adjacent != 0: # Não fazer nada para barra 0; 
-                    if aux.voltage == None:
-                        aux.voltage = aux.calcVoltage(components, bars)
-                    if not bars[adjacent].isVisited:
-                        return bars[adjacent].set_voltages(components, bars)
-            # Verifying process end
-            visited = [bar.isVisited for bar in bars if bar.id != 0]
-            if None in visited:
-                for i, visited in enumerate(visited):
-                    if visited == None:
-                        aux = bars[i + 1]
-                        break
-            else:
-                break
-            
-    def calcVoltage(self, components, bars):
-        """This method returns the calculation of the bar voltage given the first known voltage connected to the bar.
-
-        :param components: A list of the given eletric components .
-        :type components: [Generators(), Transformers(), ShortTLines(), MediumTLines(), Loads()] or any combination of these objects.
-        :param bars: A list with all the instances of Bars().
-        :type bars: [Bar(1st instance), Bars(2nd instance), ...].
-        :return: A float representing the bar base voltage.
-        :rtype: float.
-        """
-        mc = MagConversion()
-        current_bar = self
-        knownVoltageBar = current_bar.findFirstKnowVoltageBar(bars)
-        knownVoltage = mc.get_value(knownVoltageBar.voltage['nominal'])
-        terminals = (current_bar.id, knownVoltageBar.id)
-        selected_component = None
-        for component in components:
-            if terminals[0] in component.terminals and terminals[1] in component.terminals:
-                selected_component = component
-                break
-        if isinstance(selected_component, Transformers):
-            transformer = selected_component
-            voltage_h = (mc.get_value(transformer.voltage_t0), transformer.terminals[0])
-            voltage_l = (mc.get_value(transformer.voltage_t1), transformer.terminals[1])
-            transf_relation = voltage_h[0] / voltage_l[0]
-            if current_bar.id == voltage_h[1]:
-                current_bar.voltage = knownVoltage * transf_relation
-            else:
-                current_bar.voltage = knownVoltage / transf_relation
-        elif isinstance(selected_component, ShortTLines) or isinstance(selected_component, MediumTLines):
-            current_bar.voltage = knownVoltage
-        current_bar_voltage = mc.get_eng_notation(current_bar.voltage.real)
-        current_bar.voltage = DefaultDictFormat().get_dict_struct(Voltage(current_bar_voltage[0],
-                                                                current_bar_voltage[1],
-                                                                'V'))
-        return current_bar.voltage
-
-    def findFirstKnowVoltageBar(self, bars):
-        """This method returns the first known voltage of a adjacent bar of the current bar.
-
-        :param bars: A list with all the instances of Bars().
-        :type bars: [Bar(1st instance), Bars(2nd instance), ...].
-        :return: Returns the voltage of the first adjacente bar with a known voltage.
-        :rtype: float.
-        """
-        for adjacent in self.adjacents:
-            if bars[adjacent].id != 0 and bars[adjacent].voltage:
-                return bars[adjacent]
-
-    @classmethod
-    def del_instances(cls):
-        cls.instances = []
-
-
+import app.operations as op
+import app.sys_primetives as sp
+import app.sys_components as sc
+
+####################################### Pu Calculations #############################################
 class PuConvesions():
     """This class is responsable for converting all power system inputed components to pu.
     """
@@ -606,8 +27,8 @@ class PuConvesions():
         self.name = 'Classe Conversão PU'
         PuConvesions.instances.append(self)
         self.id = len(PuConvesions.instances)
-        self.sys_power = sys_power
-        self.sys_voltage = sys_voltage
+        self.power = sys_power
+        self.voltage = sys_voltage
         self.bar = bar
 
     def generator_to_pu(self, bars, components):
@@ -618,29 +39,54 @@ class PuConvesions():
         :param components: A list of the given eletric components .
         :type components: [Generators(), Transformers(), ShortTLines(), MediumTLines(), Loads()] or any combination of these objects.
         """
-        generators = [component for component in components if isinstance(component, Generators)]
-        mc = MagConversion()
+        generators = [component for component in components if isinstance(component, sc.Generators)]
+        mc = op.MagConversion()
+        d = op.DefaultDictFormat()
         for gen in generators: 
-            base_p = mc.get_value(self.sys_power)
-            gen_npower = mc.get_value(gen.power)
+            # Get Generator nominal values and system power base
+            system_bs = mc.get_value(self.power, 'base')
+            gen_ns_value = mc.get_value(gen.power, 'nominal')
+            gen_nv_value = mc.get_value(gen.voltage_t0, 'nominal')
+            gen_nz_value = mc.get_value(gen.impedance, 'nominal')
             for bar in bars:
                 if bar.id == gen.terminals[1] and bar.id != 0:
-                    # Converting power to pu
-                    gen.set_power('base', base_p)
-                    gen.set_power('pu', Power(complex(gen_npower / base_p), '', 'pu'))
-                    # Converting voltage to pu
-                    gen_nvoltage = mc.get_value(gen.voltage['nominal'])
-                    gen.set_voltage('base', bar.voltage)
-                    gen.set_voltage('pu', Voltage(complex(gen_nvoltage / bar.voltage), '', 'pu', gen.terminals[1]))
-                    # Converting impedance to pu
-                    gen_nimpedance = mc.get_value(gen.series_impedance['nominal'])
-                    gen.set_series_impedance('base', pow(gen_nvoltage, 2) / gen_npower)
-                    impedance = complex(gen_nimpedance * gen.series_impedance['base'] * (base_p / pow(bar.voltage, 2)))
-                    gen.set_series_impedance('pu', Impedance(impedance, '', 'pu', 'Série'))
-                    # Setting Admittance
-                    gen.set_series_admittance('base', gen_npower / pow(gen_nvoltage, 2))
-                    admittance = complex(pow(bar.voltage, 2) / (gen_nimpedance * gen.series_impedance['base'] * base_p))
-                    gen.set_series_admittance('pu', Admittance(admittance, '', 'pu'))          
+                    # Get match Bar Voltage Value
+                    bar_voltage_value = mc.get_value(bar.voltage, 'base')
+                    # Creating power struct and converting power to pu
+                    gen_sb = sp.Power(complex(system_bs), '', 'VA')
+                    gen_spu = sp.Power(complex(gen_ns_value / system_bs), '', 'pu')
+                    # Setting base and pu power in Generator
+                    gen.set_power(gen_sb, 'base')
+                    gen.set_power(gen_spu, 'pu')
+                    # Creating voltage struct and converting voltage to pu
+                    gen_vb = sp.Voltage(complex(bar_voltage_value), '', 'V')
+                    gen_vpu = sp.Voltage(complex(gen_nv_value / bar_voltage_value), '', 'pu')
+                    # Setting base and pu voltage in Generator
+                    gen.set_voltage_t0(gen_vb, 'base')
+                    gen.set_voltage_t0(gen_vpu, 'pu')
+                    # Calculating Generator base impedance
+                    gen_zb_value = complex(0, (bar_voltage_value ** 2) / system_bs)
+                    gen_zb = sp.Impedance(gen_zb_value, '', 'ohm', cnx_type='Série')
+                    # Setting Generator base impedance
+                    gen.set_impedance(gen_zb, 'base')
+                    # Calculating Generator pu impedance
+                    gen_puz_value = complex(0, gen_nz_value * pow(gen_nv_value / bar_voltage_value, 2) * (system_bs / gen_ns_value))
+                    gen_zpu = sp.Impedance(gen_puz_value, '', 'pu', cnx_type='Série')
+                    # Setting Generator Pu Impedance
+                    gen.set_impedance(gen_zpu, 'pu')
+                    #### Converting nominal impedance to nominal admittance
+                    # Invert nominal impedance and atributte it to nominal admittance
+                    gen_yn = mc.get_inverse_eng_notation(gen.impedance, 'nominal', sp.Admittance, 'Siemens')
+                    gen_yn.set_cnx_type(cnx_type='Série')
+                    gen_yn = d.get_primetive_struct(gen_yn, 'nominal')
+                    gen.set_admittance(gen_yn)
+                    #### Setting base and pu admittance in Generator
+                    # Invert base and pu impedance and atributte it to base and pu admittance, respectively
+                    gen_yb = mc.get_inverse_eng_notation(gen.impedance, 'base', sp.Admittance, 'Siemens')
+                    gen_ypu = mc.get_inverse_eng_notation(gen.impedance, 'pu', sp.Admittance, 'pu')
+                    # Setting base and pu admittance in Generator
+                    gen.set_admittance(gen_yb, 'base')
+                    gen.set_admittance(gen_ypu, 'pu')       
 
     def transformer_to_pu(self, bars, components):
         """This method converts the transformer nominal impedance to pu.
@@ -650,43 +96,82 @@ class PuConvesions():
         :param components: A list of the given eletric components .
         :type components: [Generators(), Transformers(), ShortTLines(), MediumTLines(), Loads()] or any combination of these objects.
         """
-        transformers = [component for component in components if isinstance(component, Transformers)]
-        mc = MagConversion()
+        transformers = [component for component in components if isinstance(component, sc.Transformers)]
+        mc = op.MagConversion()
+        d = op.DefaultDictFormat()
         for tran in transformers: 
-            # Getting power values
-            base_p = mc.get_value(self.sys_power)
-            tran_npower = mc.get_value(tran.power)
-            # Converting power to pu
-            tran.set_power('base', base_p)
-            tran.set_power('pu', Power(complex(tran_npower / base_p), '', 'pu'))
-            # Getting transformer nominal values
-            tran_nhv = mc.get_value(tran.voltage_h['nominal'])
-            tran_nlv = mc.get_value(tran.voltage_l['nominal'])  
-            tran_nz = mc.get_value(tran.series_impedance['nominal'])  
-            # Setting high and low voltage bars
-            bar_h = tran.voltage_h['nominal'].bar
-            bar_l = tran.voltage_l['nominal'].bar
-            # Setting high and low voltages basys
-            h_voltage_base = bars[bar_h].voltage
-            l_voltage_base = bars[bar_l].voltage
+            # Get Transformer nominal values and system power base
+            system_bs = mc.get_value(self.power, 'base')
+            tran_npower_value = mc.get_value(tran.power, 'nominal')
+            tran_nhv_value = mc.get_value(tran.voltage_t0, 'nominal')
+            tran_nlv_value = mc.get_value(tran.voltage_t1, 'nominal')
+            tran_nz_value = mc.get_value(tran.impedance, 'nominal')
+            # Creating power struct and converting power to pu
+            tran_sb = sp.Power(complex(system_bs), '', 'VA')
+            tran_spu = sp.Power(complex(tran_npower_value / system_bs), '', 'pu')
+            # Setting base and pu power in Transformer
+            tran.set_power(tran_sb, 'base')
+            tran.set_power(tran_spu, 'pu')
             for bar in bars:
-                # Match current trasformer terminal with bar
                 if bar.id in tran.terminals:
-                    # Converting voltage high to pu
-                    tran.set_voltage_h('base', h_voltage_base)
-                    tran.set_voltage_h('pu', Voltage(complex(tran_nhv / h_voltage_base), '', 'pu', tran.terminals[0]))
-                    # Converting voltage low to pu
-                    tran.set_voltage_l('base', l_voltage_base)
-                    tran.set_voltage_l('pu', Voltage(complex(tran_nlv / l_voltage_base), '', 'pu', tran.terminals[1]))
-                    # Converting impedance to pu
-                    tran.set_series_impedance('base', pow(tran_nhv, 2) / tran_npower)
-                    impedance = complex(tran_nz * tran.series_impedance['base'] * (base_p / pow(h_voltage_base, 2)))
-                    tran.set_series_impedance('pu', Impedance(impedance, '', 'pu', 'Série'))
-                    # Setting Admittance
-                    tran.set_series_admittance('base', tran_npower / pow(tran_nhv, 2))
-                    admittance = complex(pow(h_voltage_base, 2) / (tran_nz * tran.series_impedance['base'] * base_p))
-                    tran.set_series_admittance('pu', Admittance(admittance, '', 'pu'))         
-            
+                    # Getting base voltages from matching bars
+                    if bar.id == tran.terminals[0]:
+                        h_voltage = bar.voltage['base']
+                        h_voltage_base_value = mc.get_value(bar.voltage, 'base')
+                        l_voltage = bars[tran.terminals[1]].voltage
+                        l_voltage_base_value = mc.get_value(bars[tran.terminals[1]].voltage, 'base')
+                    elif bar.id == tran.terminals[1]:
+                        h_voltage = bars[tran.terminals[0]].voltage
+                        h_voltage_base_value = mc.get_value(bars[tran.terminals[0]].voltage, 'base')
+                        l_voltage = bar.voltage['base']
+                        l_voltage_base_value = mc.get_value(bar.voltage, 'base')
+                    # Setting Transformer base voltages
+                    tran.set_voltage_t0(h_voltage, 'base')
+                    tran.set_voltage_t1(l_voltage, 'base')
+                    #### Handling Transformer Pu Voltages
+                    # Calculating pu voltages
+                    tran_puhv_value = complex(tran_nhv_value / h_voltage_base_value)
+                    tran_pulv_value = complex(tran_nlv_value / l_voltage_base_value)
+                    tran_puhv = sp.Voltage(tran_puhv_value, '', 'pu')
+                    tran_pulv = sp.Voltage(tran_pulv_value, '', 'pu')
+                    # Setting pu voltages
+                    tran.set_voltage_t0(tran_puhv, 'pu')
+                    tran.set_voltage_t1(tran_pulv, 'pu')
+                    #### Handling Transformer base impedance
+                    # Calculating base impedance ref high
+                    tran_bzh_value = (h_voltage_base_value ** 2) / system_bs
+                    tran_bzh = sp.Impedance(tran_bzh_value, '', 'ohm')
+                    # Setting base impedance
+                    tran.set_impedance(tran_bzh, 'base')
+                    #### Handling Transformer pu impedance
+                    # Calculating impedance for base change calcutations
+                    tran_calc_zh = (tran_nhv_value ** 2) / tran_npower_value
+                    # Calculating pu impedance value
+                    tran_puz_value = complex(0, tran_nz_value * (tran_calc_zh / tran_bzh_value))
+                    # Setting pu impedance
+                    tran_puz = sp.Impedance(tran_puz_value, '', 'pu', cnx_type='Série')
+                    tran.set_impedance(tran_puz, 'pu')
+                    #### Handling Transformer nominal admittance
+                    ## Converting nominal impedance to nominal admittance
+                    # Invert nominal impedance and atributte it to nominal admittance
+                    tran_ny = mc.get_inverse_eng_notation(tran.impedance, 'nominal', sp.Admittance, 'Siemens')
+                    # Setting nominal admittance
+                    tran_ny.set_cnx_type(cnx_type='Série')
+                    tran_ny = d.get_primetive_struct(tran_ny, 'nominal')
+                    tran.set_admittance(tran_ny)
+                    #### Handling Transformer base admittance
+                    # Getting base admittance
+                    tran_by = mc.get_inverse_eng_notation(tran.impedance, 'base', sp.Admittance, 'Siemens')
+                    tran_by.set_cnx_type(cnx_type='Série')
+                    # Setting base admittance
+                    tran.set_admittance(tran_by, 'base')
+                    #### Handling Transformer pu admittance
+                    # Getting pu admittance
+                    tran_puy = mc.get_inverse_eng_notation(tran.impedance, 'pu', sp.Admittance, 'pu')
+                    tran_puy.set_cnx_type(cnx_type='Série')
+                    # Setting pu admittance
+                    tran.set_admittance(tran_puy, 'pu')
+
     def tlines_to_pu(self, bars, components):
         """This method converts the transmission lines nominal impedance to pu.
 
@@ -695,55 +180,83 @@ class PuConvesions():
         :param components: A list of the given eletric components .
         :type components: [Generators(), Transformers(), ShortTLines(), MediumTLines(), Loads()] or any combination of these objects.
         """
-        tlines = [component for component in components if isinstance(component, ShortTLines) or isinstance(component, MediumTLines)]
-        mc = MagConversion()
-        # Getting power base values
-        base_p = mc.get_value(self.sys_power)
-        
+        tlines = [component for component in components if isinstance(component, sc.ShortTLines) or isinstance(component, sc.MediumTLines)]
+        mc = op.MagConversion()
+        d = op.DefaultDictFormat()
+        # Getting system power base value
+        system_bs_value = mc.get_value(self.power, 'base')
         for line in tlines:
             for bar in bars:
-                # Match current bar with transmission line in question
-                if bar.id in line.terminals and not line.series_impedance['base']:
-                    # Getting voltage and impedance base values
-                    base_v = bar.voltage
-                    # Setting base impedance
-                    base_z = pow(base_v, 2) / base_p
-                    ######################################################################## Converting impedance to pu
-                    # Get nominal series impedance value
-                    line_sz = mc.get_value(line.series_impedance['nominal'])
-                    # print(f'line_sz = {line_sz}', file=sys.stderr)
-                    # Setting base series impedance
-                    line.set_series_impedance('base', base_z)
-                    # Setting pu series impedance
-                    series_impedance = complex(line_sz / line.series_impedance['base'])
-                    line.set_series_impedance('pu', Impedance(series_impedance, '', 'pu', 'Série'))
-                    # Setting base series admittance
-                    line.set_series_admittance('base', pow(base_z, -1))
-                    # Setting pu series admittance
-                    series_admittance = complex(line.series_impedance['base'] / line_sz)  
-                    line.set_series_admittance('pu', Admittance(series_admittance, '', 'pu'))    
-
-
-                    if isinstance(line, MediumTLines):
-                        # Get nominal shunt and shunt per side impedance values
-                        line_shz = mc.get_value(line.shunt_impedance['nominal'])
-                        line_shzps = mc.get_value(line.shunt_impedance_per_side['nominal'])
-                        # Set shunt and shunt per side base impedance values
-                        line.set_shunt_impedance('base', base_z)
-                        line.set_shunt_impedance_per_side('base', base_z)
-                        # Set shunt and shunt per side base admittance values
-                        line.set_shunt_admittance('base', pow(base_z, -1))
-                        line.set_shunt_admittance_per_side('base', pow(base_z, -1))
-                        # Set shunt and shunt per side pu impedance values
-                        shunt_impedance = complex(line_shz / line.shunt_impedance['base'])  
-                        line.set_shunt_impedance('pu', Impedance(shunt_impedance, '', 'pu', 'Shunt'))
-                        shunt_impedance_per_side = complex(line_shzps / line.shunt_impedance_per_side['base'])  
-                        line.set_shunt_impedance_per_side('pu', Impedance(shunt_impedance_per_side, '', 'pu', 'Shunt'))
-                        # Set shunt and shunt per side pu admittance values
-                        shunt_admittance = complex(line.shunt_impedance['base'] / line_shz)  
-                        line.set_shunt_admittance('pu', Admittance(shunt_admittance, '', 'pu'))
-                        shunt_admittance_per_side = complex(line.shunt_impedance_per_side['base'] / line_shzps)  
-                        line.set_shunt_admittance_per_side('pu', Admittance(shunt_admittance_per_side, '', 'pu'))
+                # Match current bar with transmission line
+                if bar.id in line.terminals:
+                    #### Handling Line base impedance
+                    # Get Line base voltage
+                    line_bv_value = mc.get_value(bar.voltage, 'base')
+                    # Calculating Line base impedance
+                    line_bz_value = pow(line_bv_value, 2) / system_bs_value
+                    line_bz = sp.Impedance(line_bz_value, '', 'Siemens')
+                    # Identify line type
+                    if line.name == 'Linha de Transmissão Pequena':
+                        # Set Line base impedance
+                        line.set_impedance(line_bz, 'base')
+                        # Getting line series nominal impedance
+                        line_nsz_value = mc.get_value(line.impedance, 'nominal')
+                        #### Handling Line pu impedance
+                        # Calculating pu impedance
+                        line_puz_value = line_nsz_value / line_bz_value
+                        # Setting pu impedance
+                        line_puz = sp.Impedance(line_puz_value, '', 'pu', cnx_type='Série')
+                        line.set_impedance(line_puz, 'pu')
+                        #### Handling Line Admittance
+                        # Get Line nominal Admittance
+                        line_ny = mc.get_inverse_eng_notation(line.impedance, 'nominal', sp.Admittance, 'Siemens')
+                        line_ny_struct = d.get_primetive_struct(line_ny, 'nominal')
+                        # Set Line nominal Admittance
+                        line.set_admittance(line_ny_struct)
+                        # Get Line base Admittance
+                        line_by = mc.get_inverse_eng_notation(line.impedance, 'base', sp.Admittance, 'Siemens')
+                        # Set Line base Admittance
+                        line.set_admittance(line_by, 'base')
+                        # Get Line pu Admittance
+                        line_puy = mc.get_inverse_eng_notation(line.impedance, 'pu', sp.Admittance, 'pu')
+                        # Set Line pu Admittance
+                        line.set_admittance(line_puy, 'pu')
+                    else: 
+                        # Set Line base impedances
+                        line.set_impedance(line_bz, 'Série', 'base')
+                        line.set_impedance(line_bz, 'Shunt', 'base')
+                        # Getting line series and shunt nominal impedances
+                        line_nsz_value = mc.get_value(line.impedance[0], 'nominal')
+                        line_nshz_value = mc.get_value(line.impedance[1], 'nominal')
+                        #### Handling Line pu impedance
+                        # Calculating line series and shunt pu impedances
+                        line_pusz_value = line_nsz_value / line_bz_value
+                        line_pushz_value = (2 * line_nshz_value) / line_bz_value
+                        # Setting line series and shunt pu impedances
+                        line_pusz = sp.Impedance(line_pusz_value, '', 'pu', cnx_type='Série')
+                        line_pushz = sp.Impedance(line_pushz_value, '', 'pu', cnx_type='Shunt')
+                        line.set_impedance(line_pusz, 'Série', 'pu')
+                        line.set_impedance(line_pushz, 'Shunt', 'pu')
+                        #### Handling Line Admittance
+                        # Get Line nominal Admittances
+                        line_nsy = mc.get_inverse_eng_notation(line.impedance[0], 'nominal', sp.Admittance, 'Siemens')
+                        line_nshy = mc.get_inverse_eng_notation(line.impedance[1], 'nominal', sp.Admittance, 'Siemens')
+                        line_nsy_struct = d.get_primetive_struct(line_nsy, 'nominal')
+                        line_nshy_struct = d.get_primetive_struct(line_nshy, 'nominal')
+                        # Set Line nominal Admittances
+                        line.set_admittance(line_nsy_struct, 'Série')
+                        line.set_admittance(line_nshy_struct, 'Shunt')
+                        # Get Line base Admittance
+                        line_by = mc.get_inverse_eng_notation(line.impedance[0], 'base', sp.Admittance, 'Siemens')
+                        # Set Line base Admittances
+                        line.set_admittance(line_by, 'Série', 'base')
+                        line.set_admittance(line_by, 'Shunt', 'base')
+                        # Get Line pu Admittances
+                        line_pusy = mc.get_inverse_eng_notation(line.impedance[0], 'pu', sp.Admittance, 'pu')
+                        line_pushy = mc.get_inverse_eng_notation(line.impedance[1], 'pu', sp.Admittance, 'pu')
+                        # Set Line pu Admittances
+                        line.set_admittance(line_pusy, 'Série', 'pu')
+                        line.set_admittance(line_pushy, 'Shunt', 'pu')
 
     def loads_to_pu(self, bars, components):
         """This method converts the loads nominal power to pu.
@@ -753,20 +266,21 @@ class PuConvesions():
         :param components: A list of the given eletric components .
         :type components: [Generators(), Transformers(), ShortTLines(), MediumTLines(), Loads()] or any combination of these objects.
         """
-        loads = [component for component in components if isinstance(component, Loads)]
-        mc = MagConversion()
+        loads = [component for component in components if isinstance(component, sc.Loads)]
+        mc = op.MagConversion()
         
         for load in loads:
-            load_power = mc.get_value(load.power['nominal'])
-            load_base_power = mc.get_value(self.sys_power)
-            load.set_power('base', load_base_power)
-            load.set_power('pu', Power(load_power / load_base_power, '', 'pu'))
+            load_power = mc.get_value(load.power, 'nominal')
+            load_base_power = mc.get_value(self.power, 'base')
+            load.set_power(load_base_power, 'base')
+            load.set_power(sp.Power(load_power / load_base_power, '', 'pu'), 'pu')
 
     @classmethod
     def del_instances(cls):
         cls.instances = []
 
 
+####################################### Leitura de dados ############################################
 class ExcelToValues():
     def __init__(self, excel) -> None:
         self.system_basis = pd.read_excel(excel, sheet_name="Bases do Sistema")
@@ -1078,19 +592,20 @@ class FormToValues():
         ValuesToObj.load(load_values)
 
 
+####################################### Obj Instantiation ###########################################
 class ValuesToObj():
     component_list = []
 
     @staticmethod
     def bar(terminals):
         for bar in terminals:
-            Bars(bar)
+            sc.Bars(bar)
 
     @staticmethod
     def sb(sb_values):
-        d = DefaultDictFormat()
-        power_sb = d.get_dict_struct(Power(complex(sb_values['power_mag']), sb_values['power_mult'], sb_values['power_measure']))
-        voltage_sb = d.get_dict_struct(Voltage(complex(sb_values['voltage_mag']), sb_values['voltage_mult'], sb_values['voltage_measure']))
+        d = op.DefaultDictFormat()
+        power_sb = d.get_primetive_struct(sp.Power(complex(sb_values['power_mag']), sb_values['power_mult'], sb_values['power_measure']), 'base')
+        voltage_sb = d.get_primetive_struct(sp.Voltage(complex(sb_values['voltage_mag']), sb_values['voltage_mult'], sb_values['voltage_measure']), 'base')
         bar_sb = sb_values['bar']
         pu_conv = PuConvesions(power_sb, voltage_sb, bar_sb) 
         ValuesToObj.bar((0, bar_sb))
@@ -1098,71 +613,71 @@ class ValuesToObj():
 
     @staticmethod
     def generator(generators):
-        d = DefaultDictFormat()
+        d = op.DefaultDictFormat()
         for gen in generators:
             tg = (0, gen['bar'])
-            pg = d.get_dict_struct(Power(complex(gen['power_mag']), gen['power_mult'], gen['power_measure']))
-            vg = d.get_dict_struct(Voltage(complex(gen['voltage_mag']), gen['voltage_mult'], gen['voltage_measure']))
-            zpug = d.get_dict_struct(Impedance(gen['impedance_mag'], gen['impedance_mult'], gen['impedance_measure'], 'Série'))
-            g = Generators(tg, zpug, pg, vg)
+            pg = d.get_primetive_struct(sp.Power(complex(gen['power_mag']), gen['power_mult'], gen['power_measure']), 'nominal')
+            vg = d.get_primetive_struct(sp.Voltage(complex(gen['voltage_mag']), gen['voltage_mult'], gen['voltage_measure']), 'nominal')
+            zpug = d.get_primetive_struct(sp.Impedance(complex(gen['impedance_mag']), gen['impedance_mult'], gen['impedance_measure'], 'Série'), 'nominal')
+            g = sc.Generators(tg, zpug, pg, vg)
             ValuesToObj.bar(tg)
             ValuesToObj.component_list.append(g)
 
     @staticmethod
     def transformer(transformers):
-        d = DefaultDictFormat()
+        d = op.DefaultDictFormat()
         for tran in transformers:
             tt = (tran['t0'], tran['t1'])
-            zput = d.get_dict_struct(Impedance(tran['impedance_mag'], tran['impedance_mult'], tran['impedance_measure'], 'Série'))
-            pt = d.get_dict_struct(Power(complex(tran['power_mag']), tran['power_mult'], tran['power_measure']))
-            vht = d.get_dict_struct(Voltage(complex(tran['high_voltage_mag']), tran['high_voltage_mult'], tran['high_voltage_measure']))
-            vlt = d.get_dict_struct(Voltage(complex(tran['low_voltage_mag']), tran['low_voltage_mult'], tran['low_voltage_measure']))
-            t = Transformers(tt, zput, pt, vht, vlt)
+            zput = d.get_primetive_struct(sp.Impedance(complex(tran['impedance_mag']), tran['impedance_mult'], tran['impedance_measure'], 'Série'), 'nominal')
+            pt = d.get_primetive_struct(sp.Power(complex(tran['power_mag']), tran['power_mult'], tran['power_measure']), 'nominal')
+            vht = d.get_primetive_struct(sp.Voltage(complex(tran['high_voltage_mag']), tran['high_voltage_mult'], tran['high_voltage_measure']), 'nominal')
+            vlt = d.get_primetive_struct(sp.Voltage(complex(tran['low_voltage_mag']), tran['low_voltage_mult'], tran['low_voltage_measure']), 'nominal')
+            t = sc.Transformers(tt, zput, pt, vht, vlt)
             ValuesToObj.bar(tt)
             ValuesToObj.component_list.append(t)
 
     @staticmethod
     def short_tline(short_tlines):
-        d = DefaultDictFormat()
+        d = op.DefaultDictFormat()
         for line in short_tlines:
             tstl = (line['t0'], line['t1'])
-            zsstl = d.get_dict_struct(Impedance(complex(line['series_impedance_mag']), 
+            zsstl = d.get_primetive_struct(sp.Impedance(complex(line['series_impedance_mag']), 
                                                 line['series_impedance_mult'], 
                                                 line['series_impedance_measure'], 
                                                 float(line['lenght']), 
-                                                'Série'))
-            stl = ShortTLines(tstl, zsstl)
+                                                'Série'), 'nominal')
+            stl = sc.ShortTLines(tstl, zsstl)
             ValuesToObj.bar(tstl)
             ValuesToObj.component_list.append(stl)
 
     @staticmethod
     def medium_tline(medium_tlines):
-        d = DefaultDictFormat()
+        d = op.DefaultDictFormat()
         for line in medium_tlines:
             tmtl = (line['t0'], line['t1'])
-            zsmtl = d.get_dict_struct(Impedance(complex(line['series_impedance_mag']), 
+            zsmtl = d.get_primetive_struct(sp.Impedance(complex(line['series_impedance_mag']), 
                                                 line['series_impedance_mult'], 
                                                 line['series_impedance_measure'], 
                                                 float(line['lenght']), 
-                                                'Série'))
-            zshmtl = d.get_dict_struct(Impedance(complex(line['shunt_impedance_mag']), 
+                                                'Série'), 'nominal')
+            zshmtl = d.get_primetive_struct(sp.Impedance(complex(line['shunt_impedance_mag']), 
                                                 line['shunt_impedance_mult'], 
                                                 line['shunt_impedance_measure'], 
                                                 float(line['lenght']), 
-                                                'Shunt'))
-            mtl = MediumTLines(tmtl, zshmtl, tmtl)
+                                                'Shunt'), 'nominal')
+            mtl = sc.MediumTLines(tmtl, [zsmtl, zshmtl])
             ValuesToObj.bar(tmtl)
             ValuesToObj.component_list.append(mtl)
 
     @staticmethod
     def load(loads):
-        d = DefaultDictFormat()
+        d = op.DefaultDictFormat()
         for load in loads:
             tld = (0, load['bar'])
-            pld = d.get_dict_struct(Power(complex(load['power_mag']), load['power_mult'], load['power_measure']))
+            pld = d.get_primetive_struct(sp.Power(complex(load['power_mag']), load['power_mult'], load['power_measure']), 'nominal')
             pf = load['power_factor_mag']
             pf_char = load['power_factor_characteristic']
-            ld = Loads(tld, pld, pf, pf_char)
+            ld = sc.Loads(tld, pld, pf, pf_char)
             ValuesToObj.bar(tld)
             ValuesToObj.component_list.append(ld)
 
@@ -1175,6 +690,7 @@ class ValuesToObj():
         cls.component_list = []
 
 
+################################### System connections validation ###################################
 class Validation():
     @staticmethod
     def validate_system_connections(component_list):
@@ -1202,6 +718,7 @@ class Validation():
         return continuity_check
 
 
+####################################### Rounding numbers ############################################
 class PrepareForTemplate():            
     @staticmethod
     def get_rounded_string(complex_number):
@@ -1225,12 +742,13 @@ class PrepareForTemplate():
         return complex_number_str
 
 
+####################################### Solve algorithm ##############################################
 class Run():
     instances = []
 
     def __init__(self, conv_components) -> None:
         self.conv_components = conv_components
-        self.bars = Bars.get_bars()
+        self.bars = sc.Bars.get_bars()
 
     def prep_bars(self, components):
         # Setting adjacent bars
@@ -1239,13 +757,17 @@ class Run():
                 bar.set_adjacent(components)
 
     def set_base_voltages(self, conv, components):
-        # Defining groung and head bar
+        d = op.DefaultDictFormat()
+        # Specifying groung and head bar
         head = self.bars[conv.bar]
-        self.bars[head.id].set_voltage(conv.sys_voltage)
-
         ground_bar = self.bars[0]
-        ground_bar.set_voltage(Voltage(0, 'k', 'V'))
-
+        # Getting voltage in dict struct format
+        head_voltage = conv.voltage
+        groung_bar_voltage = d.get_primetive_struct(sp.Voltage(complex(0), 'k', 'V'), 'base')
+        # Setting base voltages for ground and head bar
+        self.bars[head.id].set_voltage(head_voltage)       
+        ground_bar.set_voltage(groung_bar_voltage)
+        # Algorithm to set all remaining base voltages
         head.set_voltages(components, self.bars)
 
     def conv_to_pu(self):
@@ -1278,35 +800,18 @@ class Run():
         cls.instances = []
 
 
+
+####################################### deleting objects ############################################
 class ClearObjects():
     @classmethod
     def clear_all(cls):
-        Generators.del_instances()
-        Transformers.del_instances()
-        ShortTLines.del_instances()
-        MediumTLines.del_instances()
-        Loads.del_instances()
-        Bars.del_instances()
+        sc.Generators.del_instances()
+        sc.Transformers.del_instances()
+        sc.ShortTLines.del_instances()
+        sc.MediumTLines.del_instances()
+        sc.Loads.del_instances()
+        sc.Bars.del_instances()
         PuConvesions.del_instances()
         ValuesToObj.del_component_list()
         Run.del_instances()
 
-
-
-        
-    # def correct_shunt_impedance_per_side(self):
-    #     """This method corrects the value of shunt impedance per side.
-    #     """
-    #     self.shunt_impedance_per_side['nominal'].mag = 2 * self.shunt_impedance['nominal'].mag
-    #     self.shunt_impedance_per_side['nominal'].characteristic = 'Shunt/lado'
-#       def correct_const_power(self):
-#         if self.power['nominal'].measurement_unit == 'VA':
-#             apparent_power = self.power['nominal'].mag
-#             active_power = apparent_power * float(self.pf.pf)
-#             reactive_power = ((apparent_power ** 2) - (active_power ** 2)) ** 0.5
-#             self.power['nominal'].mag = complex(active_power, reactive_power)
-#         else:
-#             active_power = self.power['nominal'].mag
-#             apparent_power = active_power / float(self.pf.pf)
-#             reactive_power = ((apparent_power ** 2) - (active_power ** 2)) ** 0.5
-#             self.power['nominal'].mag = complex(active_power, reactive_power) 

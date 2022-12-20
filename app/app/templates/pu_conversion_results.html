@@ -1,88 +1,104 @@
 {% extends "layout.html" %}
 {% block content %}
     <div class="mx-auto p-0 w-75">
-        <div class="row border border-dark rounded p-0 m-0 my-1 bg-light">
-            {% for component in component_list %}
-                {% if component.name == 'Classe Conversão PU' %}
-                    <div class="m-0 p-0 text-center">
-                        <h1 class="h2 m-0 p-0">Conversão PU</h1>
-                        {% for attr, value in component.__dict__.items() %}
-                            {% if attr == 'sys_power' %}
-                                <p class="m-0 p-0"><p class="text-center p-0 m-0"><span class="fw-bold">{{ value.name }}:</span> {{ value }}</p>
-                            {% endif %}
-                            {% if attr == 'sys_voltage' %}
-                                <p class="m-0 p-0"><p class="text-center p-0 m-0"><span class="fw-bold">{{ value['nominal'].name }}:</span> {{ value['nominal'] }}</p>
-                            {% endif %}
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            {% endfor %}
+        <div class="row border border-dark rounded p-0 py-1 m-0 my-2 bg-light">
+            <div class="m-0 p-0 text-center">
+                <h1 class="h2 m-0 p-0">Conversão PU</h1>
+                <p class="text-center p-0 m-0">
+                    <span class="fw-bold">{{ component_list[0].power['base'].name }}:</span> 
+                    {{ print_template.get_rounded_string(component_list[0].power['base'].mag) }}
+                    {{ component_list[0].power['base'].multiplier }}{{ component_list[0].power['base'].measurement_unit }}
+                </p>    
+                <p class="text-center p-0 m-0">    
+                    <span class="fw-bold">{{ component_list[0].voltage['base'].name }}:</span> 
+                    {{ print_template.get_rounded_string(component_list[0].voltage['base'].mag) }}
+                    {{ component_list[0].voltage['base'].multiplier }}{{ component_list[0].voltage['base'].measurement_unit }}
+                </p>
+            </div>
         </div>
-        <div class="d-flex justify-content-center row border border-dark rounded bg-light p-0 m-0">
-            {% for component in component_list %}
-                {% if component.name != 'Classe Conversão PU' %}
-                    <div class="row p-0 mx-0 my-0">
-                        <h2 class="h4 text-center">{{ component.name }} {{ component.id }}</h2>
-                    </div>
-                    <div class="row p-0 my-0 mb-4">
-                        {% for attr, value in component.__dict__.items() %}
+        <div class="row border border-dark rounded p-0 py-1 m-0 my-1 bg-light">
+            {% for component in component_list[1:] %}
+                <div class="row p-0 mx-0 my-0">
+                    <h2 class="h4 text-center">{{ component.name }} {{ component.id + 1}}</h2>
+                </div>
+                <div class="row p-0 my-0 mb-4">
+                    {% for attr, value in component.__dict__.items() %}
+                        {% if value %}
                             {% if 'power' in attr %}
-                                <p class="text-center p-0 m-0"><span class="fw-bold">{{ value['nominal'].name }}:</span> {{ value['nominal'] }}
+                                <p class="text-center p-0 m-0">
+                                    <span class="fw-bold">{{ value['nominal'].name }}:</span> 
+                                    {{ print_template.get_rounded_string(value['nominal'].mag) }}
+                                    {{ value['nominal'].multiplier }}{{ value['nominal'].measurement_unit }}
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right-circle-fill" viewBox="0 0 16 16">
                                         <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5z"/>
                                     </svg>
-                                    {{ value['pu'] }}
+                                    {{ print_template.get_rounded_string(value['pu'].mag) }}
+                                    {{ value['pu'].multiplier }}{{ value['pu'].measurement_unit }}    
                                 </p>
                             {% elif 'voltage' in attr %}
-                                <p class="text-center p-0 m-0"><span class="fw-bold">{{ value['nominal'].name }}:</span> {{ value['nominal'] }}
+                                <p class="text-center p-0 m-0">
+                                    <span class="fw-bold">{{ value['nominal'].name }}:</span> 
+                                    {{ print_template.get_rounded_string(value['nominal'].mag) }}
+                                    {{ value['nominal'].multiplier }}{{ value['nominal'].measurement_unit }}
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right-circle-fill" viewBox="0 0 16 16">
                                         <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5z"/>
                                     </svg>
-                                    {{ value['pu'] }}
+                                    {{ print_template.get_rounded_string(value['pu'].mag) }}
+                                    {{ value['pu'].multiplier }}{{ value['pu'].measurement_unit }}
                                 </p>
                             {% elif 'impedance' in attr %}
-                                {% if 'series' in attr %}
-                                    <p class="text-center p-0 m-0"><span class="fw-bold">{{ value['nominal'].name }} Série:</span> {{ value['nominal'] }}
+                                {% if component.name != 'Linha de Trasmissão Média' %}
+                                    <p class="text-center p-0 m-0">
+                                        <span class="fw-bold">{{ value['nominal'].name }}:</span> 
+                                        {{ print_template.get_rounded_string(value['nominal'].mag) }}
+                                        {{ value['nominal'].multiplier }}{{ value['nominal'].measurement_unit }}
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right-circle-fill" viewBox="0 0 16 16">
                                             <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5z"/>
                                         </svg>
-                                        {{ value['pu'] }}
+                                        {{ print_template.get_rounded_string(value['pu'].mag) }}
+                                        {{ value['pu'].multiplier }}{{ value['pu'].measurement_unit }} 
                                     </p>
                                 {% else %}
-                                    {% if 'per' in attr %}
-                                        <p class="text-center p-0 m-0"><span class="fw-bold">{{ value['nominal'].name }} Shunt nos Terminais:</span> {{ value['nominal'] }}
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right-circle-fill" viewBox="0 0 16 16">
-                                                <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5z"/>
-                                            </svg>
-                                            {{ value['pu'] }}
-                                        </p>
-                                    {% endif %}
+                                    <p class="text-center p-0 m-0">
+                                        <span class="fw-bold">{{ value[0]['nominal'].name }} {{ value[0]['nominal'].cnx_type }}:</span> 
+                                        {{ print_template.get_rounded_string(value[0]['nominal'].mag) }}
+                                        {{ value[0]['nominal'].multiplier }}{{ value[0]['nominal'].measurement_unit }}
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right-circle-fill" viewBox="0 0 16 16">
+                                            <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5z"/>
+                                        </svg>
+                                        {{ print_template.get_rounded_string(value[0]['pu'].mag) }}
+                                        {{ value[0]['pu'].multiplier }}{{ value[0]['pu'].measurement_unit }} 
+                                    </p>
+                                    <p class="text-center p-0 m-0">
+                                        <span class="fw-bold">{{ value[1]['nominal'].name }} {{ value[1]['nominal'].cnx_type }}:</span> 
+                                        {{ print_template.get_rounded_string(value[1]['nominal'].mag) }}
+                                        {{ value[1]['nominal'].multiplier }}{{ value[1]['nominal'].measurement_unit }}
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right-circle-fill" viewBox="0 0 16 16">
+                                            <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5z"/>
+                                        </svg>
+                                        {{ print_template.get_rounded_string(value[1]['pu'].mag) }}
+                                        {{ value[1]['pu'].multiplier }}{{ value[1]['pu'].measurement_unit }} 
+                                    </p>
                                 {% endif %}
-                            
-                            {% elif 'pf' in attr %}
-                                <p class="text-center p-0 m-0"><span class="fw-bold">{{ value.name }}:</span> {{ value }}
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right-circle-fill" viewBox="0 0 16 16">
-                                        <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5z"/>
-                                    </svg>
-                                    {{ value }}
-                                </p>
                             {% endif %}
-                        {% endfor %}
-                    </div>
-                {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                </div>
             {% endfor %}
         </div>
-        <div class="row m-0 my-2 p-0">
-            <form method="POST" action="" class="m-0 p-0">
-                {{ clear_obj_form.hidden_tag() }}
-                {{ clear_obj_form.submit_clear(class="btn btn-secondary m-0 w-100") }}
-            </form>
-        </div>
-        <div class="row m-0 my-2 p-0">
-            <form method="POST" action="" class="m-0 p-0">
-                {{ generate_matrix_form.hidden_tag() }}
-                {{ generate_matrix_form.submit_matrix(class="btn btn-secondary m-0 w-100") }}
-            </form>
+        <div class="row border border-dark rounded p-1 m-0 bg-light">        
+            <div class="row flex-shrink-1 m-2 p-0">
+                <form method="POST" action="" class="m-0 p-0">
+                    {{ clear_obj_form.hidden_tag() }}
+                    {{ clear_obj_form.submit_clear(class="btn btn-secondary m-0 w-100") }}
+                </form>
+            </div>
+            <div class="row flex-shrink-1 m-2 p-0">
+                <form method="POST" action="" class="m-0 p-0">
+                    {{ generate_matrix_form.hidden_tag() }}
+                    {{ generate_matrix_form.submit_matrix(class="btn btn-secondary m-0 w-100") }}
+                </form>
+            </div>
         </div>
     </div>
 {% endblock content %}

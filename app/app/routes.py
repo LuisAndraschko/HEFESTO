@@ -101,6 +101,8 @@ def pu_conversion_results():
     clear_obj_form = ClearPuObjForm()
     generate_matrix_form = GenerateAdmittanceMatrixForm()
     component_list = pucv.ValuesToObj.get_components()
+    
+    print_template = pucv.PrepareForTemplate()
 
     if clear_obj_form.submit_clear.data:
         component_list = pucv.ClearObjects.clear_all()
@@ -109,7 +111,8 @@ def pu_conversion_results():
         return redirect(url_for('admittance_matrix_results'))
     return render_template("pu_conversion_results.html", title='Conversão Pu - Resultados', 
                             clear_obj_form=clear_obj_form, generate_matrix_form=generate_matrix_form,
-                            component_list=component_list)
+                            component_list=component_list, print_template=print_template, 
+                            isinstance=isinstance, list=list)
 
 @app.route("/admittance_matrix", methods=['GET', 'POST'])
 def admittance_matrix():
