@@ -12,10 +12,419 @@ import app.operations as op
 import app.sys_primetives as sp
 import app.sys_components as sc
 
+
+####################################### Leitura de dados ############################################
+class ExcelToValues():
+    def __init__(self, excel) -> None:
+        self.system_basis = pd.read_excel(excel, sheet_name="Bases do Sistema")
+        self.generators = pd.read_excel(excel, sheet_name="Geradores")
+        self.transformers = pd.read_excel(excel, sheet_name="Transformadores")
+        self.short_tlines = pd.read_excel(excel, sheet_name="LT Curtas")
+        self.medium_tlines = pd.read_excel(excel, sheet_name="LT Médias")
+        self.loads = pd.read_excel(excel, sheet_name="Cargas")
+
+    def create_all(self):
+        self.pu_conv_sb()
+        self.pu_conv_gen()
+        self.pu_conv_tran()
+        self.pu_conv_short_tline()
+        self.pu_conv_medium_tline()
+        self.pu_conv_load()
+
+    def get_mag_mult_measure(self, df, row_index, column_index):
+        mag = str(df.iloc[row_index, column_index]).replace(",", ".")
+        mult = df.iloc[row_index, column_index + 1]
+        measure = df.iloc[row_index, column_index + 2]
+        return (mag, mult, measure)
+
+    def get_power_factor_values(self, df, row_index, column_index):
+        mag = str(df.iloc[row_index, column_index]).replace(",", ".")
+        characteristic = df.iloc[row_index, column_index + 1]
+        return (mag, characteristic)
+
+    def pu_conv_sb(self):
+        df = pd.DataFrame(self.system_basis)
+        # Reading Power
+        i_power = df.columns.get_loc('Potência de base')
+        power = self.get_mag_mult_measure(df, 0, i_power)
+        # Reading Voltage
+        i_voltage = df.columns.get_loc('Tensão de base')
+        voltage = self.get_mag_mult_measure(df, 0, i_voltage)
+        # Reading bar
+        bar = df.loc[0, 'Barra']
+        # Packing Values
+        sb_values = {
+            'power_mag': power[0], 
+            'power_mult': power[1], 
+            'power_measure': power[2], 
+            'voltage_mag': voltage[0], 
+            'voltage_mult': voltage[1], 
+            'voltage_measure': voltage[2], 
+            'bar': bar       
+            }
+        ValuesToComponents.sb(sb_values)
+
+    def pu_conv_gen(self):
+        df = pd.DataFrame(self.generators)
+        generators = []
+        
+        i_power = df.columns.get_loc('Potência')
+        i_voltage = df.columns.get_loc('Tensão')
+        i_impedance = df.columns.get_loc('Impedância')
+        
+        for index, row in df.iterrows():
+            # Reading Power
+            power = self.get_mag_mult_measure(df, index, i_power)
+            # Reading Voltage
+            voltage = self.get_mag_mult_measure(df, index, i_voltage)
+            # Reading Impedance
+            impedance = self.get_mag_mult_measure(df, index, i_impedance)
+            # Reading bar
+            bar = row['Barra']
+            # Packing Values
+            gen_values = {
+                'power_mag': power[0], 
+                'power_mult': power[1], 
+                'power_measure': power[2], 
+                'voltage_mag': voltage[0], 
+                'voltage_mult': voltage[1], 
+                'voltage_measure': voltage[2], 
+                'impedance_mag': impedance[0], 
+                'impedance_mult': impedance[1], 
+                'impedance_measure': impedance[2], 
+                'bar': bar
+                }
+            generators.append(gen_values)
+        
+        ValuesToComponents.generator(generators)
+
+    def pu_conv_tran(self):
+        df = pd.DataFrame(self.transformers)
+        transformers = []
+        
+        i_power = df.columns.get_loc('Potência')
+        i_hvoltage = df.columns.get_loc('Tensão Alta')
+        i_lvoltage = df.columns.get_loc('Tensão Baixa')
+        i_impedance = df.columns.get_loc('Impedância')
+        i_t_high = df.columns.get_loc('Terminal Alta')
+        i_t_low = df.columns.get_loc('Terminal Baixa')
+
+        for index, row in df.iterrows():
+            # Reading Power
+            power = self.get_mag_mult_measure(df, index, i_power)
+            # Reading High Voltage
+            hvoltage = self.get_mag_mult_measure(df, index, i_hvoltage)
+            # Reading Low Voltage
+            lvoltage = self.get_mag_mult_measure(df, index, i_lvoltage)
+            # Reading Impedance
+            impedance = self.get_mag_mult_measure(df, index, i_impedance)
+            # Reading Terminas
+            t0, t1 = row['Terminal Alta'], row['Terminal Baixa']
+            # Packing Values
+            gen_values = {
+                'power_mag': power[0], 
+                'power_mult': power[1], 
+                'power_measure': power[2], 
+                'high_voltage_mag': hvoltage[0], 
+                'high_voltage_mult': hvoltage[1], 
+                'high_voltage_measure': hvoltage[2],  
+                'low_voltage_mag': lvoltage[0], 
+                'low_voltage_mult': lvoltage[1], 
+                'low_voltage_measure': lvoltage[2], 
+                'impedance_mag': impedance[0], 
+                'impedance_mult': impedance[1], 
+                'impedance_measure': impedance[2], 
+                't0': t0,
+                't1': t1
+                }
+            transformers.append(gen_values)
+
+        ValuesToComponents.transformer(transformers)
+
+    def pu_conv_short_tline(self):
+        df = pd.DataFrame(self.short_tlines)
+        short_tlines = []
+        
+        i_series_impedance = df.columns.get_loc('Impedância Série')
+        
+        for index, row in df.iterrows():
+            # Reading Series Impedance
+            series_impedance = self.get_mag_mult_measure(df, index, i_series_impedance)
+            # Reading Terminals
+            t0, t1 = row['Terminal 1'], row['Terminal 2']
+            # Reading lenght
+            lenght = row['Comprimento da LT (km)']
+            # Packing Values
+            short_tline_values = {
+                'series_impedance_mag': series_impedance[0], 
+                'series_impedance_mult': series_impedance[1], 
+                'series_impedance_measure': series_impedance[2], 
+                't0': t0,
+                't1': t1,
+                'lenght': lenght
+                }
+            short_tlines.append(short_tline_values)
+        
+        ValuesToComponents.short_tline(short_tlines)
+
+    def pu_conv_medium_tline(self):
+        df = pd.DataFrame(self.medium_tlines)
+        medium_tlines = []
+        
+        i_series_impedance = df.columns.get_loc('Impedância Série')
+        i_shunt_impedance = df.columns.get_loc('Impedância Shunt')
+        
+        for index, row in df.iterrows():
+            # Reading Series Impedance
+            series_impedance = self.get_mag_mult_measure(df, index, i_series_impedance)
+            # Reading Shunt Impedance
+            shunt_impedance = self.get_mag_mult_measure(df, index, i_shunt_impedance)
+            # Reading Terminals
+            t0, t1 = row['Terminal 1'], row['Terminal 2']
+            # Reading lenght
+            lenght = row['Comprimento da LT (km)']
+            # Packing Values
+            medium_tline_values = {
+                'series_impedance_mag': series_impedance[0], 
+                'series_impedance_mult': series_impedance[1], 
+                'series_impedance_measure': series_impedance[2],
+                'shunt_impedance_mag': shunt_impedance[0], 
+                'shunt_impedance_mult': shunt_impedance[1], 
+                'shunt_impedance_measure': shunt_impedance[2], 
+                't0': t0,
+                't1': t1,
+                'lenght': lenght
+                }
+            medium_tlines.append(medium_tline_values)
+        
+        ValuesToComponents.medium_tline(medium_tlines)
+
+    def pu_conv_load(self):
+        df = pd.DataFrame(self.loads)
+        loads = []
+        
+        i_power = df.columns.get_loc('Potência')
+        i_power_factor = df.columns.get_loc('Fator de Potência')
+        
+        for index, row in df.iterrows():
+            # Reading Power
+            power = self.get_mag_mult_measure(df, index, i_power)
+            # Reading Power Factor
+            power_factor = self.get_power_factor_values(df, index, i_power_factor)
+            # Reading bar
+            bar = row['Barra']
+            # Packing Values
+            load_values = {
+                'power_mag': power[0], 
+                'power_mult': power[1], 
+                'power_measure': power[2], 
+                'power_factor_mag': power_factor[0], 
+                'power_factor_characteristic': power_factor[1], 
+                'bar': bar
+                }
+            loads.append(load_values)
+        
+        ValuesToComponents.load(loads)
+
+
+class FormToValues():
+    @staticmethod
+    def sb_form_to_value(form):
+        # Packing Values
+        sb_values = {
+        'power_mag': form.power_mag.data,
+        'power_mult': form.power_mult.data,
+        'power_measure': form.power_measure.data,
+        'voltage_mag': form.voltage_mag.data,
+        'voltage_mult': form.voltage_mult.data,
+        'voltage_measure': form.voltage_measure.data,
+        'bar': form.bar.data
+        }
+        ValuesToComponents.sb(sb_values)
+
+    @staticmethod
+    def generator_form_to_value(form):
+        # Packing Values
+        gen_values = {
+        'power_mag': form.power_mag.data,
+        'power_mult': form.power_mult.data,
+        'power_measure': form.power_measure.data,
+        't1': form.t1.data,
+        'voltage_mag': form.voltage_mag.data,
+        'voltage_mult': form.voltage_mult.data,
+        'voltage_measure': form.voltage_measure.data,
+        'impedance_mag': form.impedance_mag.data,
+        'impedance_mult': form.impedance_mult.data,
+        'impedance_measure': form.impedance_measure.data
+        }
+        ValuesToComponents.pu_conv_generator(gen_values)
+        
+    @staticmethod
+    def transformer_form_to_value(form):
+        # Packing Values
+        tran_values = {
+            'power_mag': form.power_mag.data,
+            'power_mult': form.power_mult.data,
+            'power_measure': form.power_measure.data,
+            't0': form.t0.data,
+            't1': form.t1.data,
+            'high_voltage_mag': form.high_voltage_mag.data,
+            'high_voltage_measure': form.high_voltage_measure.data,
+            't0': form.t0.data,
+            'low_voltage_mag': form.low_voltage_mag.data,
+            'low_voltage_mult': form.low_voltage_mult.data,
+            'low_voltage_measure': form.low_voltage_measure.data,
+            't1': form.t1.data,
+            'impedance_mag': form.impedance_mag.data,
+            'impedance_mult': form.impedance_mult.data,
+            'impedance_measure': form.impedance_measure.data
+        }
+        ValuesToComponents.transformer(tran_values)
+
+    @staticmethod
+    def short_tline_form_to_value(form):
+        # Packing Values
+        short_tline_values = {
+            't0': form.t0.data,
+            't1': form.t1.data,
+            'series_impedance_mag': form.series_impedance_mag.data,
+            'series_impedance_mult': form.series_impedance_mult.data,
+            'series_impedance_measure': form.series_impedance_measure.data,
+            'lenght': form.lenght.data
+        }
+        ValuesToComponents.short_tlin_form_to_value(short_tline_values)
+
+    @staticmethod
+    def medium_tline_form_to_value(form):
+        # Packing Values
+        medium_tline_values = {
+            't0': form.t0.data,
+            't1': form.t1.data,
+            'series_impedance_mag': form.series_impedance_mag.data,
+            'shunt_impedance_mag': form.shunt_impedance_mag.data,
+            'series_impedance_mult': form.series_impedance_mult.data,
+            'series_impedance_measure': form.series_impedance_measure.data,
+            'lenght': form.lenght.data,
+            'shunt_impedance_mult': form.shunt_impedance_mult.data,
+            'shunt_impedance_measure': form.shunt_impedance_measure.data,
+            'lenght': form.lenght.data
+        }
+        ValuesToComponents.medium_tline(medium_tline_values)
+
+    @staticmethod
+    def load_form_to_value(form): 
+        # Packing Values
+        load_values = {
+            'power_mag': form.power_mag.data,
+            'power_mult': form.power_mult.data,
+            'power_measure': form.power_measure.data,
+            't1': form.t1.data,
+            'power_factor_mag': form.power_factor_mag.data,
+            'power_factor_characteristic': form.power_factor_characteristic.data
+        }
+        ValuesToComponents.load(load_values)
+
+
+####################################### Obj Instantiation ###########################################
+class ValuesToComponents():
+    component_list = []
+
+    @staticmethod
+    def bar(terminals):
+        for bar in terminals:
+            sc.Bars(bar)
+
+    @staticmethod
+    def sb(sb_values):
+        d = op.DefaultDictFormat()
+        power_sb = d.get_primitive_struct(sp.Power(complex(sb_values['power_mag']), sb_values['power_mult'], sb_values['power_measure']), 'base')
+        voltage_sb = d.get_primitive_struct(sp.Voltage(complex(sb_values['voltage_mag']), sb_values['voltage_mult'], sb_values['voltage_measure']), 'base')
+        bar_sb = sb_values['bar']
+        pu_conv = PuConvesions(power_sb, voltage_sb, bar_sb) 
+        ValuesToComponents.bar((0, bar_sb))
+        ValuesToComponents.component_list.append(pu_conv)
+
+    @staticmethod
+    def generator(generators):
+        d = op.DefaultDictFormat()
+        for gen in generators:
+            tg = (0, gen['bar'])
+            pg = d.get_primitive_struct(sp.Power(complex(gen['power_mag']), gen['power_mult'], gen['power_measure']), 'nominal')
+            vg = d.get_primitive_struct(sp.Voltage(complex(gen['voltage_mag']), gen['voltage_mult'], gen['voltage_measure']), 'nominal')
+            zpug = d.get_primitive_struct(sp.Impedance(complex(gen['impedance_mag']), gen['impedance_mult'], gen['impedance_measure'], 'Série'), 'nominal')
+            g = sc.Generators(tg, zpug, pg, vg)
+            ValuesToComponents.bar(tg)
+            ValuesToComponents.component_list.append(g)
+
+    @staticmethod
+    def transformer(transformers):
+        d = op.DefaultDictFormat()
+        for tran in transformers:
+            tt = (tran['t0'], tran['t1'])
+            zput = d.get_primitive_struct(sp.Impedance(complex(tran['impedance_mag']), tran['impedance_mult'], tran['impedance_measure'], 'Série'), 'nominal')
+            pt = d.get_primitive_struct(sp.Power(complex(tran['power_mag']), tran['power_mult'], tran['power_measure']), 'nominal')
+            vht = d.get_primitive_struct(sp.Voltage(complex(tran['high_voltage_mag']), tran['high_voltage_mult'], tran['high_voltage_measure']), 'nominal')
+            vlt = d.get_primitive_struct(sp.Voltage(complex(tran['low_voltage_mag']), tran['low_voltage_mult'], tran['low_voltage_measure']), 'nominal')
+            t = sc.Transformers(tt, zput, pt, vht, vlt)
+            ValuesToComponents.bar(tt)
+            ValuesToComponents.component_list.append(t)
+
+    @staticmethod
+    def short_tline(short_tlines):
+        d = op.DefaultDictFormat()
+        for line in short_tlines:
+            tstl = (line['t0'], line['t1'])
+            zsstl = d.get_primitive_struct(sp.Impedance(complex(line['series_impedance_mag']), 
+                                                line['series_impedance_mult'], 
+                                                line['series_impedance_measure'], 
+                                                float(line['lenght']), 
+                                                'Série'), 'nominal')
+            stl = sc.ShortTLines(tstl, zsstl)
+            ValuesToComponents.bar(tstl)
+            ValuesToComponents.component_list.append(stl)
+
+    @staticmethod
+    def medium_tline(medium_tlines):
+        d = op.DefaultDictFormat()
+        for line in medium_tlines:
+            tmtl = (line['t0'], line['t1'])
+            zsmtl = d.get_primitive_struct(sp.Impedance(complex(line['series_impedance_mag']), 
+                                                line['series_impedance_mult'], 
+                                                line['series_impedance_measure'], 
+                                                float(line['lenght']), 
+                                                'Série'), 'nominal')
+            zshmtl = d.get_primitive_struct(sp.Impedance(complex(line['shunt_impedance_mag']), 
+                                                line['shunt_impedance_mult'], 
+                                                line['shunt_impedance_measure'], 
+                                                float(line['lenght']), 
+                                                'Shunt'), 'nominal')
+            mtl = sc.MediumTLines(tmtl, [zsmtl, zshmtl])
+            ValuesToComponents.bar(tmtl)
+            ValuesToComponents.component_list.append(mtl)
+
+    @staticmethod
+    def load(loads):
+        d = op.DefaultDictFormat()
+        for load in loads:
+            tld = (0, load['bar'])
+            pld = d.get_primitive_struct(sp.Power(complex(load['power_mag']), load['power_mult'], load['power_measure']), 'nominal')
+            pf = load['power_factor_mag']
+            pf_char = load['power_factor_characteristic']
+            ld = sc.Loads(tld, pld, pf, pf_char)
+            ValuesToComponents.bar(tld)
+            ValuesToComponents.component_list.append(ld)
+
+    @staticmethod
+    def get_components():
+        return ValuesToComponents.component_list
+    
+    @classmethod
+    def del_component_list(cls):
+        cls.component_list = []
+
+
 ####################################### Pu Calculations #############################################
 class PuConvesions():
-    """This class is responsable for converting all power system inputed components to pu.
-    """
     instances = []
 
     def __init__(self, sys_power, sys_voltage, bar) -> None:
@@ -78,7 +487,7 @@ class PuConvesions():
                     # Invert nominal impedance and atributte it to nominal admittance
                     gen_yn = mc.get_inverse_eng_notation(gen.impedance, 'nominal', sp.Admittance, 'Siemens')
                     gen_yn.set_cnx_type(cnx_type='Série')
-                    gen_yn = d.get_primetive_struct(gen_yn, 'nominal')
+                    gen_yn = d.get_primitive_struct(gen_yn, 'nominal')
                     gen.set_admittance(gen_yn)
                     #### Setting base and pu admittance in Generator
                     # Invert base and pu impedance and atributte it to base and pu admittance, respectively
@@ -157,7 +566,7 @@ class PuConvesions():
                     tran_ny = mc.get_inverse_eng_notation(tran.impedance, 'nominal', sp.Admittance, 'Siemens')
                     # Setting nominal admittance
                     tran_ny.set_cnx_type(cnx_type='Série')
-                    tran_ny = d.get_primetive_struct(tran_ny, 'nominal')
+                    tran_ny = d.get_primitive_struct(tran_ny, 'nominal')
                     tran.set_admittance(tran_ny)
                     #### Handling Transformer base admittance
                     # Getting base admittance
@@ -173,13 +582,6 @@ class PuConvesions():
                     tran.set_admittance(tran_puy, 'pu')
 
     def tlines_to_pu(self, bars, components):
-        """This method converts the transmission lines nominal impedance to pu.
-
-        :param bars: A list with all the instances of Bars().
-        :type bars: [Bar(1st instance), Bars(2nd instance), ...].
-        :param components: A list of the given eletric components .
-        :type components: [Generators(), Transformers(), ShortTLines(), MediumTLines(), Loads()] or any combination of these objects.
-        """
         tlines = [component for component in components if isinstance(component, sc.ShortTLines) or isinstance(component, sc.MediumTLines)]
         mc = op.MagConversion()
         d = op.DefaultDictFormat()
@@ -210,7 +612,7 @@ class PuConvesions():
                         #### Handling Line Admittance
                         # Get Line nominal Admittance
                         line_ny = mc.get_inverse_eng_notation(line.impedance, 'nominal', sp.Admittance, 'Siemens')
-                        line_ny_struct = d.get_primetive_struct(line_ny, 'nominal')
+                        line_ny_struct = d.get_primitive_struct(line_ny, 'nominal')
                         # Set Line nominal Admittance
                         line.set_admittance(line_ny_struct)
                         # Get Line base Admittance
@@ -241,8 +643,8 @@ class PuConvesions():
                         # Get Line nominal Admittances
                         line_nsy = mc.get_inverse_eng_notation(line.impedance[0], 'nominal', sp.Admittance, 'Siemens')
                         line_nshy = mc.get_inverse_eng_notation(line.impedance[1], 'nominal', sp.Admittance, 'Siemens')
-                        line_nsy_struct = d.get_primetive_struct(line_nsy, 'nominal')
-                        line_nshy_struct = d.get_primetive_struct(line_nshy, 'nominal')
+                        line_nsy_struct = d.get_primitive_struct(line_nsy, 'nominal')
+                        line_nshy_struct = d.get_primitive_struct(line_nshy, 'nominal')
                         # Set Line nominal Admittances
                         line.set_admittance(line_nsy_struct, 'Série')
                         line.set_admittance(line_nshy_struct, 'Shunt')
@@ -280,468 +682,6 @@ class PuConvesions():
         cls.instances = []
 
 
-####################################### Leitura de dados ############################################
-class ExcelToValues():
-    def __init__(self, excel) -> None:
-        self.system_basis = pd.read_excel(excel, sheet_name="Bases do Sistema")
-        self.generators = pd.read_excel(excel, sheet_name="Geradores")
-        self.transformers = pd.read_excel(excel, sheet_name="Transformadores")
-        self.short_tlines = pd.read_excel(excel, sheet_name="LT Curtas")
-        self.medium_tlines = pd.read_excel(excel, sheet_name="LT Médias")
-        self.loads = pd.read_excel(excel, sheet_name="Cargas")
-
-    def create_all(self):
-        self.pu_conv_sb()
-        self.pu_conv_gen()
-        self.pu_conv_tran()
-        self.pu_conv_short_tline()
-        self.pu_conv_medium_tline()
-        self.pu_conv_load()
-
-    def get_mag_mult_measure(self, df, row_index, column_index):
-        mag = str(df.iloc[row_index, column_index]).replace(",", ".")
-        mult = df.iloc[row_index, column_index + 1]
-        measure = df.iloc[row_index, column_index + 2]
-        return (mag, mult, measure)
-
-    def get_power_factor_values(self, df, row_index, column_index):
-        mag = str(df.iloc[row_index, column_index]).replace(",", ".")
-        characteristic = df.iloc[row_index, column_index + 1]
-        return (mag, characteristic)
-
-    def pu_conv_sb(self):
-        df = pd.DataFrame(self.system_basis)
-        # Reading Power
-        i_power = df.columns.get_loc('Potência de base')
-        power = self.get_mag_mult_measure(df, 0, i_power)
-        # Reading Voltage
-        i_voltage = df.columns.get_loc('Tensão de base')
-        voltage = self.get_mag_mult_measure(df, 0, i_voltage)
-        # Reading bar
-        bar = df.loc[0, 'Barra']
-        # Packing Values
-        sb_values = {
-            'power_mag': power[0], 
-            'power_mult': power[1], 
-            'power_measure': power[2], 
-            'voltage_mag': voltage[0], 
-            'voltage_mult': voltage[1], 
-            'voltage_measure': voltage[2], 
-            'bar': bar       
-            }
-        ValuesToObj.sb(sb_values)
-
-    def pu_conv_gen(self):
-        df = pd.DataFrame(self.generators)
-        generators = []
-        
-        i_power = df.columns.get_loc('Potência')
-        i_voltage = df.columns.get_loc('Tensão')
-        i_impedance = df.columns.get_loc('Impedância')
-        
-        for index, row in df.iterrows():
-            # Reading Power
-            power = self.get_mag_mult_measure(df, index, i_power)
-            # Reading Voltage
-            voltage = self.get_mag_mult_measure(df, index, i_voltage)
-            # Reading Impedance
-            impedance = self.get_mag_mult_measure(df, index, i_impedance)
-            # Reading bar
-            bar = row['Barra']
-            # Packing Values
-            gen_values = {
-                'power_mag': power[0], 
-                'power_mult': power[1], 
-                'power_measure': power[2], 
-                'voltage_mag': voltage[0], 
-                'voltage_mult': voltage[1], 
-                'voltage_measure': voltage[2], 
-                'impedance_mag': impedance[0], 
-                'impedance_mult': impedance[1], 
-                'impedance_measure': impedance[2], 
-                'bar': bar
-                }
-            generators.append(gen_values)
-        
-        ValuesToObj.generator(generators)
-
-    def pu_conv_tran(self):
-        df = pd.DataFrame(self.transformers)
-        transformers = []
-        
-        i_power = df.columns.get_loc('Potência')
-        i_hvoltage = df.columns.get_loc('Tensão Alta')
-        i_lvoltage = df.columns.get_loc('Tensão Baixa')
-        i_impedance = df.columns.get_loc('Impedância')
-        i_t_high = df.columns.get_loc('Terminal Alta')
-        i_t_low = df.columns.get_loc('Terminal Baixa')
-
-        for index, row in df.iterrows():
-            # Reading Power
-            power = self.get_mag_mult_measure(df, index, i_power)
-            # Reading High Voltage
-            hvoltage = self.get_mag_mult_measure(df, index, i_hvoltage)
-            # Reading Low Voltage
-            lvoltage = self.get_mag_mult_measure(df, index, i_lvoltage)
-            # Reading Impedance
-            impedance = self.get_mag_mult_measure(df, index, i_impedance)
-            # Reading Terminas
-            t0, t1 = row['Terminal Alta'], row['Terminal Baixa']
-            # Packing Values
-            gen_values = {
-                'power_mag': power[0], 
-                'power_mult': power[1], 
-                'power_measure': power[2], 
-                'high_voltage_mag': hvoltage[0], 
-                'high_voltage_mult': hvoltage[1], 
-                'high_voltage_measure': hvoltage[2],  
-                'low_voltage_mag': lvoltage[0], 
-                'low_voltage_mult': lvoltage[1], 
-                'low_voltage_measure': lvoltage[2], 
-                'impedance_mag': impedance[0], 
-                'impedance_mult': impedance[1], 
-                'impedance_measure': impedance[2], 
-                't0': t0,
-                't1': t1
-                }
-            transformers.append(gen_values)
-
-        ValuesToObj.transformer(transformers)
-
-    def pu_conv_short_tline(self):
-        df = pd.DataFrame(self.short_tlines)
-        short_tlines = []
-        
-        i_series_impedance = df.columns.get_loc('Impedância Série')
-        
-        for index, row in df.iterrows():
-            # Reading Series Impedance
-            series_impedance = self.get_mag_mult_measure(df, index, i_series_impedance)
-            # Reading Terminals
-            t0, t1 = row['Terminal 1'], row['Terminal 2']
-            # Reading lenght
-            lenght = row['Comprimento da LT (km)']
-            # Packing Values
-            short_tline_values = {
-                'series_impedance_mag': series_impedance[0], 
-                'series_impedance_mult': series_impedance[1], 
-                'series_impedance_measure': series_impedance[2], 
-                't0': t0,
-                't1': t1,
-                'lenght': lenght
-                }
-            short_tlines.append(short_tline_values)
-        
-        ValuesToObj.short_tline(short_tlines)
-
-    def pu_conv_medium_tline(self):
-        df = pd.DataFrame(self.medium_tlines)
-        medium_tlines = []
-        
-        i_series_impedance = df.columns.get_loc('Impedância Série')
-        i_shunt_impedance = df.columns.get_loc('Impedância Shunt')
-        
-        for index, row in df.iterrows():
-            # Reading Series Impedance
-            series_impedance = self.get_mag_mult_measure(df, index, i_series_impedance)
-            # Reading Shunt Impedance
-            shunt_impedance = self.get_mag_mult_measure(df, index, i_shunt_impedance)
-            # Reading Terminals
-            t0, t1 = row['Terminal 1'], row['Terminal 2']
-            # Reading lenght
-            lenght = row['Comprimento da LT (km)']
-            # Packing Values
-            medium_tline_values = {
-                'series_impedance_mag': series_impedance[0], 
-                'series_impedance_mult': series_impedance[1], 
-                'series_impedance_measure': series_impedance[2],
-                'shunt_impedance_mag': shunt_impedance[0], 
-                'shunt_impedance_mult': shunt_impedance[1], 
-                'shunt_impedance_measure': shunt_impedance[2], 
-                't0': t0,
-                't1': t1,
-                'lenght': lenght
-                }
-            medium_tlines.append(medium_tline_values)
-        
-        ValuesToObj.medium_tline(medium_tlines)
-
-    def pu_conv_load(self):
-        df = pd.DataFrame(self.loads)
-        loads = []
-        
-        i_power = df.columns.get_loc('Potência')
-        i_power_factor = df.columns.get_loc('Fator de Potência')
-        
-        for index, row in df.iterrows():
-            # Reading Power
-            power = self.get_mag_mult_measure(df, index, i_power)
-            # Reading Power Factor
-            power_factor = self.get_power_factor_values(df, index, i_power_factor)
-            # Reading bar
-            bar = row['Barra']
-            # Packing Values
-            load_values = {
-                'power_mag': power[0], 
-                'power_mult': power[1], 
-                'power_measure': power[2], 
-                'power_factor_mag': power_factor[0], 
-                'power_factor_characteristic': power_factor[1], 
-                'bar': bar
-                }
-            loads.append(load_values)
-        
-        ValuesToObj.load(loads)
-
-
-class FormToValues():
-    @staticmethod
-    def sb_form_to_value(form):
-        # Packing Values
-        sb_values = {
-        'power_mag': form.power_mag.data,
-        'power_mult': form.power_mult.data,
-        'power_measure': form.power_measure.data,
-        'voltage_mag': form.voltage_mag.data,
-        'voltage_mult': form.voltage_mult.data,
-        'voltage_measure': form.voltage_measure.data,
-        'bar': form.bar.data
-        }
-        ValuesToObj.sb(sb_values)
-
-    @staticmethod
-    def generator_form_to_value(form):
-        # Packing Values
-        gen_values = {
-        'power_mag': form.power_mag.data,
-        'power_mult': form.power_mult.data,
-        'power_measure': form.power_measure.data,
-        't1': form.t1.data,
-        'voltage_mag': form.voltage_mag.data,
-        'voltage_mult': form.voltage_mult.data,
-        'voltage_measure': form.voltage_measure.data,
-        'impedance_mag': form.impedance_mag.data,
-        'impedance_mult': form.impedance_mult.data,
-        'impedance_measure': form.impedance_measure.data
-        }
-        ValuesToObj.pu_conv_generator(gen_values)
-        
-    @staticmethod
-    def transformer(form):
-        # Packing Values
-        tran_values = {
-            'power_mag': form.power_mag.data,
-            'power_mult': form.power_mult.data,
-            'power_measure': form.power_measure.data,
-            't0': form.t0.data,
-            't1': form.t1.data,
-            'high_voltage_mag': form.high_voltage_mag.data,
-            'high_voltage_measure': form.high_voltage_measure.data,
-            't0': form.t0.data,
-            'low_voltage_mag': form.low_voltage_mag.data,
-            'low_voltage_mult': form.low_voltage_mult.data,
-            'low_voltage_measure': form.low_voltage_measure.data,
-            't1': form.t1.data,
-            'impedance_mag': form.impedance_mag.data,
-            'impedance_mult': form.impedance_mult.data,
-            'impedance_measure': form.impedance_measure.data
-        }
-        ValuesToObj.transformer(tran_values)
-
-    @staticmethod
-    def short_tline(form):
-        # Packing Values
-        short_tline_values = {
-            't0': form.t0.data,
-            't1': form.t1.data,
-            'series_impedance_mag': form.series_impedance_mag.data,
-            'series_impedance_mult': form.series_impedance_mult.data,
-            'series_impedance_measure': form.series_impedance_measure.data,
-            'lenght': form.lenght.data
-        }
-        ValuesToObj.short_tline(short_tline_values)
-
-    @staticmethod
-    def medium_tline(form):
-        # Packing Values
-        medium_tline_values = {
-            't0': form.t0.data,
-            't1': form.t1.data,
-            'series_impedance_mag': form.series_impedance_mag.data,
-            'shunt_impedance_mag': form.shunt_impedance_mag.data,
-            'series_impedance_mult': form.series_impedance_mult.data,
-            'series_impedance_measure': form.series_impedance_measure.data,
-            'lenght': form.lenght.data,
-            'shunt_impedance_mult': form.shunt_impedance_mult.data,
-            'shunt_impedance_measure': form.shunt_impedance_measure.data,
-            'lenght': form.lenght.data
-        }
-        ValuesToObj.medium_tline(medium_tline_values)
-
-    @staticmethod
-    def load(form): 
-        # Packing Values
-        load_values = {
-            'power_mag': form.power_mag.data,
-            'power_mult': form.power_mult.data,
-            'power_measure': form.power_measure.data,
-            't1': form.t1.data,
-            'power_factor_mag': form.power_factor_mag.data,
-            'power_factor_characteristic': form.power_factor_characteristic.data
-        }
-        ValuesToObj.load(load_values)
-
-
-####################################### Obj Instantiation ###########################################
-class ValuesToObj():
-    component_list = []
-
-    @staticmethod
-    def bar(terminals):
-        for bar in terminals:
-            sc.Bars(bar)
-
-    @staticmethod
-    def sb(sb_values):
-        d = op.DefaultDictFormat()
-        power_sb = d.get_primetive_struct(sp.Power(complex(sb_values['power_mag']), sb_values['power_mult'], sb_values['power_measure']), 'base')
-        voltage_sb = d.get_primetive_struct(sp.Voltage(complex(sb_values['voltage_mag']), sb_values['voltage_mult'], sb_values['voltage_measure']), 'base')
-        bar_sb = sb_values['bar']
-        pu_conv = PuConvesions(power_sb, voltage_sb, bar_sb) 
-        ValuesToObj.bar((0, bar_sb))
-        ValuesToObj.component_list.append(pu_conv)
-
-    @staticmethod
-    def generator(generators):
-        d = op.DefaultDictFormat()
-        for gen in generators:
-            tg = (0, gen['bar'])
-            pg = d.get_primetive_struct(sp.Power(complex(gen['power_mag']), gen['power_mult'], gen['power_measure']), 'nominal')
-            vg = d.get_primetive_struct(sp.Voltage(complex(gen['voltage_mag']), gen['voltage_mult'], gen['voltage_measure']), 'nominal')
-            zpug = d.get_primetive_struct(sp.Impedance(complex(gen['impedance_mag']), gen['impedance_mult'], gen['impedance_measure'], 'Série'), 'nominal')
-            g = sc.Generators(tg, zpug, pg, vg)
-            ValuesToObj.bar(tg)
-            ValuesToObj.component_list.append(g)
-
-    @staticmethod
-    def transformer(transformers):
-        d = op.DefaultDictFormat()
-        for tran in transformers:
-            tt = (tran['t0'], tran['t1'])
-            zput = d.get_primetive_struct(sp.Impedance(complex(tran['impedance_mag']), tran['impedance_mult'], tran['impedance_measure'], 'Série'), 'nominal')
-            pt = d.get_primetive_struct(sp.Power(complex(tran['power_mag']), tran['power_mult'], tran['power_measure']), 'nominal')
-            vht = d.get_primetive_struct(sp.Voltage(complex(tran['high_voltage_mag']), tran['high_voltage_mult'], tran['high_voltage_measure']), 'nominal')
-            vlt = d.get_primetive_struct(sp.Voltage(complex(tran['low_voltage_mag']), tran['low_voltage_mult'], tran['low_voltage_measure']), 'nominal')
-            t = sc.Transformers(tt, zput, pt, vht, vlt)
-            ValuesToObj.bar(tt)
-            ValuesToObj.component_list.append(t)
-
-    @staticmethod
-    def short_tline(short_tlines):
-        d = op.DefaultDictFormat()
-        for line in short_tlines:
-            tstl = (line['t0'], line['t1'])
-            zsstl = d.get_primetive_struct(sp.Impedance(complex(line['series_impedance_mag']), 
-                                                line['series_impedance_mult'], 
-                                                line['series_impedance_measure'], 
-                                                float(line['lenght']), 
-                                                'Série'), 'nominal')
-            stl = sc.ShortTLines(tstl, zsstl)
-            ValuesToObj.bar(tstl)
-            ValuesToObj.component_list.append(stl)
-
-    @staticmethod
-    def medium_tline(medium_tlines):
-        d = op.DefaultDictFormat()
-        for line in medium_tlines:
-            tmtl = (line['t0'], line['t1'])
-            zsmtl = d.get_primetive_struct(sp.Impedance(complex(line['series_impedance_mag']), 
-                                                line['series_impedance_mult'], 
-                                                line['series_impedance_measure'], 
-                                                float(line['lenght']), 
-                                                'Série'), 'nominal')
-            zshmtl = d.get_primetive_struct(sp.Impedance(complex(line['shunt_impedance_mag']), 
-                                                line['shunt_impedance_mult'], 
-                                                line['shunt_impedance_measure'], 
-                                                float(line['lenght']), 
-                                                'Shunt'), 'nominal')
-            mtl = sc.MediumTLines(tmtl, [zsmtl, zshmtl])
-            ValuesToObj.bar(tmtl)
-            ValuesToObj.component_list.append(mtl)
-
-    @staticmethod
-    def load(loads):
-        d = op.DefaultDictFormat()
-        for load in loads:
-            tld = (0, load['bar'])
-            pld = d.get_primetive_struct(sp.Power(complex(load['power_mag']), load['power_mult'], load['power_measure']), 'nominal')
-            pf = load['power_factor_mag']
-            pf_char = load['power_factor_characteristic']
-            ld = sc.Loads(tld, pld, pf, pf_char)
-            ValuesToObj.bar(tld)
-            ValuesToObj.component_list.append(ld)
-
-    @staticmethod
-    def get_components():
-        return ValuesToObj.component_list
-    
-    @classmethod
-    def del_component_list(cls):
-        cls.component_list = []
-
-
-################################### System connections validation ###################################
-class Validation():
-    @staticmethod
-    def validate_system_connections(component_list):
-        continuity_check = False
-        used = []
-        unused = []
-        for component in component_list:
-            if not isinstance(component, PuConvesions):
-                unused.append(component.terminals)
-        terminal_pair_count = len(unused)
-        used.append(unused[0])
-        unused.remove(unused[0])
-
-        for used_pair in used:
-            for used_pair_terminal in used_pair:
-                if used_pair_terminal != 0:
-                    for unused_pair in unused:
-                        if used_pair_terminal in unused_pair:
-                            used.append(unused_pair)
-                            unused.remove(unused_pair)
-                            break
-            if len(used) == terminal_pair_count:
-                continuity_check = True
-                break
-        return continuity_check
-
-
-####################################### Rounding numbers ############################################
-class PrepareForTemplate():            
-    @staticmethod
-    def get_rounded_string(complex_number):
-        # Prepare (+-real + 0j) format
-        if not complex_number.imag:
-            complex_number_str = f'{round(complex_number.real, 4):.4f}'
-        # Prepare (+-real +- imag j) format   
-        elif complex_number.imag and complex_number.real:
-            # Prepare real
-            real = f'{round(complex_number.real, 4):.4f}'
-            # Prepare +- imag j
-            imag = f'{round(complex_number.imag, 4):.4f}' + 'j'
-            # Prepare rounded and formatted number
-            if '+' in str(complex_number):
-                complex_number_str = real + '+' + imag
-            else:
-                complex_number_str = real + imag
-        else:
-            # Prepare +- imag j
-            complex_number_str = f'{round(complex_number.imag, 4):.4f}' + 'j'
-        return complex_number_str
-
-
 ####################################### Solve algorithm ##############################################
 class Run():
     instances = []
@@ -763,7 +703,7 @@ class Run():
         ground_bar = self.bars[0]
         # Getting voltage in dict struct format
         head_voltage = conv.voltage
-        groung_bar_voltage = d.get_primetive_struct(sp.Voltage(complex(0), 'k', 'V'), 'base')
+        groung_bar_voltage = d.get_primitive_struct(sp.Voltage(complex(0), 'k', 'V'), 'base')
         # Setting base voltages for ground and head bar
         self.bars[head.id].set_voltage(head_voltage)       
         ground_bar.set_voltage(groung_bar_voltage)
@@ -801,17 +741,5 @@ class Run():
 
 
 
-####################################### deleting objects ############################################
-class ClearObjects():
-    @classmethod
-    def clear_all(cls):
-        sc.Generators.del_instances()
-        sc.Transformers.del_instances()
-        sc.ShortTLines.del_instances()
-        sc.MediumTLines.del_instances()
-        sc.Loads.del_instances()
-        sc.Bars.del_instances()
-        PuConvesions.del_instances()
-        ValuesToObj.del_component_list()
-        Run.del_instances()
+
 

@@ -2,6 +2,11 @@ import app.sys_primetives as sp
 import app.operations as op
 
 class Components():
+
+    @classmethod
+    def del_instances(cls):
+        cls.instances = []
+
     def __init__(self, terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic) -> None:
         self.terminals = terminals
         self.impedance = impedance
@@ -53,8 +58,6 @@ class Components():
 
 
 class Generators(Components):
-    """This class models the eletric component of eletric power systems know as generator.
-    """
     instances = []
 
     def add_instance(self):
@@ -65,17 +68,6 @@ class Generators(Components):
 
     def __init__(self, terminals=None, impedance=None,
                  power=None, voltage_t0=None, voltage_t1=None, pf=None, characteristic=None, admittance=None) -> None:
-        """Constructor method.
-
-        :param impedance: A generator is modeled as having a series impedance. This parameter specifies the impedance chacteristics.
-        :type impedance: dict {'nominal': Impedance(), 'base': None, 'pu': None}.
-        :param terminals: A generator has a pair of terminals for this representation. This parameter specifies them.
-        :type terminals: tuple.
-        :param power: A generator has a nominal power, when is of interest this parameter specifies that, defaults to None.
-        :type power: Power(), optional.
-        :param voltage: A generator has a nominal voltage, when is of interest this parameter specifies that, defaults to None.
-        :type voltage: dict {'nominal': Voltage(), 'base': None, 'pu': None}, optional.
-        """
         self.id = self.get_id()
         self.name = 'Gerador'
         super().__init__(terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic)
@@ -87,8 +79,6 @@ class Generators(Components):
 
 
 class Transformers(Components):
-    """This class models the eletric component of eletric power systems know as transformer.
-    """
     instances = []
 
     def get_id(self):
@@ -99,17 +89,6 @@ class Transformers(Components):
     
     def __init__(self, terminals=None, impedance=None,
                  power=None, voltage_t0=None, voltage_t1=None, pf=None, characteristic=None, admittance=None) -> None:
-        """Constructor method.
-
-        :param impedance: A generator is modeled as having a series impedance. This parameter specifies the impedance chacteristics.
-        :type impedance: dict {'nominal': Impedance(), 'base': None, 'pu': None}.
-        :param terminals: A generator has a pair of terminals for this representation. This parameter specifies them.
-        :type terminals: tuple.
-        :param power: A generator has a nominal power, when is of interest this parameter specifies that, defaults to None.
-        :type power: Power(), optional.
-        :param voltage: A generator has a nominal voltage, when is of interest this parameter specifies that, defaults to None.
-        :type voltage: dict {'nominal': Voltage(), 'base': None, 'pu': None}, optional.
-        """
         self.id = self.get_id()
         self.name = 'Transformador'
         super().__init__(terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic)
@@ -121,8 +100,6 @@ class Transformers(Components):
 
 
 class ShortTLines(Components):
-    """This class models the eletric component of eletric power systems know as short transmission line.
-    """
     instances = []
     
     def get_id(self):
@@ -133,17 +110,6 @@ class ShortTLines(Components):
     
     def __init__(self, terminals=None, impedance=None, admittance=None,
                  power=None, voltage_t0=None, voltage_t1=None, pf=None, characteristic=None) -> None:
-        """Constructor method.
-
-        :param impedance: A generator is modeled as having a series impedance. This parameter specifies the impedance chacteristics.
-        :type impedance: dict {'nominal': Impedance(), 'base': None, 'pu': None}.
-        :param terminals: A generator has a pair of terminals for this representation. This parameter specifies them.
-        :type terminals: tuple.
-        :param power: A generator has a nominal power, when is of interest this parameter specifies that, defaults to None.
-        :type power: Power(), optional.
-        :param voltage: A generator has a nominal voltage, when is of interest this parameter specifies that, defaults to None.
-        :type voltage: dict {'nominal': Voltage(), 'base': None, 'pu': None}, optional.
-        """
         self.id = self.get_id()
         self.name = 'Linha de Transmissão Pequena'
         super().__init__(terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic)
@@ -155,8 +121,6 @@ class ShortTLines(Components):
 
 
 class MediumTLines(Components):
-    """This class models the eletric component of eletric power systems know as medium transmission line.
-    """
     instances = []
     
     def get_id(self):
@@ -167,17 +131,6 @@ class MediumTLines(Components):
     
     def __init__(self, terminals=None, impedance=None, admittance=None,
                  power=None, voltage_t0=None, voltage_t1=None, pf=None, characteristic=None) -> None:
-        """Constructor method.
-
-        :param impedance: A generator is modeled as having a series impedance. This parameter specifies the impedance chacteristics.
-        :type impedance: dict {'nominal': Impedance(), 'base': None, 'pu': None}.
-        :param terminals: A generator has a pair of terminals for this representation. This parameter specifies them.
-        :type terminals: tuple.
-        :param power: A generator has a nominal power, when is of interest this parameter specifies that, defaults to None.
-        :type power: Power(), optional.
-        :param voltage: A generator has a nominal voltage, when is of interest this parameter specifies that, defaults to None.
-        :type voltage: dict {'nominal': Voltage(), 'base': None, 'pu': None}, optional.
-        """
         self.id = self.get_id()
         self.name = 'Linha de Trasmissão Média'
         super().__init__(terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic)
@@ -216,8 +169,6 @@ class MediumTLines(Components):
 
 
 class Loads(Components):
-    """This class models the eletric component of eletric power systems know as load.
-    """
     instances = []
     
     def get_id(self):
@@ -227,17 +178,6 @@ class Loads(Components):
         Loads.instances.append(self)
     
     def __init__(self, terminals=None, power=None, pf=None, characteristic=None, impedance=None, admittance=None, voltage_t0=None, voltage_t1=None) -> None:
-        """Constructor method.
-
-        :param impedance: A generator is modeled as having a series impedance. This parameter specifies the impedance chacteristics.
-        :type impedance: dict {'nominal': Impedance(), 'base': None, 'pu': None}.
-        :param terminals: A generator has a pair of terminals for this representation. This parameter specifies them.
-        :type terminals: tuple.
-        :param power: A generator has a nominal power, when is of interest this parameter specifies that, defaults to None.
-        :type power: Power(), optional.
-        :param voltage: A generator has a nominal voltage, when is of interest this parameter specifies that, defaults to None.
-        :type voltage: dict {'nominal': Voltage(), 'base': None, 'pu': None}, optional.
-        """
         self.id = self.get_id()
         self.name = 'Carga'
         super().__init__(terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic)
@@ -249,8 +189,6 @@ class Loads(Components):
 
 
 class Bars():
-    """This class models the eletric element of eletric power systems know as bar.
-    """
     instances = []
 
     @classmethod
@@ -262,8 +200,6 @@ class Bars():
     
     def __init__(self, id=None, bar_type=None, adjacents=None, isVisited=None, voltage=None, 
                 active_power_in=None, reactive_power_in=None) -> None:
-        """Constructor method.
-        """
         self.id = id
         self.name = 'Barra'
         self.bar_type = bar_type
@@ -283,27 +219,12 @@ class Bars():
             self.add_instance()
                 
     def set_id(self, id) -> None:
-        """This method sets the instance attribute id with given parameter.
-
-        :param id: Identifier for the bar.
-        :type id: int.
-        """
         self.id = id
 
     def set_bar_type(self, bar_type) -> None:
-        """This method sets the instance attribute id with given parameter.
-
-        :param id: Identifier for the bar.
-        :type id: int.
-        """
         self.bar_type = bar_type
 
     def set_adjacent(self, components) -> None:
-        """This method sets a list of adjacent bars to each bar.
-
-        :param components: A list of the given eletric components .
-        :type components: [Generators(), Transformers(), ShortTLines(), MediumTLines(), Loads()] or any combination of these objects.
-        """
         self.adjacents = []
         for component in components:
             if self.id in component.terminals:
@@ -313,50 +234,21 @@ class Bars():
                      self.adjacents.append(component.terminals[1])
 
     def set_isVisited(self, isVisited) -> None:
-        """This method sets the instance attribute id with given parameter.
-
-        :param id: Identifier for the bar.
-        :type id: int.
-        """
         self.isVisited = isVisited
 
     def set_voltage(self, voltage, key=None) -> None:
-        """This method sets the instance attribute id with given parameter.
-
-        :param id: Identifier for the bar.
-        :type id: int.
-        """
         if key:
             self.voltage[key] = voltage
         else:
             self.voltage = voltage
 
     def set_active_power_in(self, active_power_in) -> None:
-        """This method sets the instance attribute id with given parameter.
-
-        :param id: Identifier for the bar.
-        :type id: int.
-        """
         self.active_power_in = active_power_in
 
     def set_reactive_power_in(self, reactive_power_in) -> None:
-        """This method sets the instance attribute id with given parameter.
-
-        :param id: Identifier for the bar.
-        :type id: int.
-        """
         self.reactive_power_in = reactive_power_in
 
     def set_voltages(self, components, bars) -> None:
-        """This method works recursively in order to visit all bars and set their base voltage.
-
-        :param components: A list of the given eletric components .
-        :type components: [Generators(), Transformers(), ShortTLines(), MediumTLines(), Loads()] or any combination of these objects.
-        :param bars: A list with all the instances of Bars().
-        :type bars: [Bar(1st instance), Bars(2nd instance), ...].
-        :return: Since this is a recursive method it returns itself ultil reaches a base case.
-        :rtype: itself
-        """
         aux = self 
         while(aux != None):
             aux.isVisited = True
@@ -377,15 +269,6 @@ class Bars():
                 break
             
     def calcVoltage(self, components, bars):
-        """This method returns the calculation of the bar voltage given the first known voltage connected to the bar.
-
-        :param components: A list of the given eletric components .
-        :type components: [Generators(), Transformers(), ShortTLines(), MediumTLines(), Loads()] or any combination of these objects.
-        :param bars: A list with all the instances of Bars().
-        :type bars: [Bar(1st instance), Bars(2nd instance), ...].
-        :return: A float representing the bar base voltage.
-        :rtype: float.
-        """
         mc = op.MagConversion()
         d = op.DefaultDictFormat()
         current_bar = self
@@ -409,22 +292,41 @@ class Bars():
         elif isinstance(selected_component, ShortTLines) or isinstance(selected_component, MediumTLines):
             current_bar.voltage = knownVoltage
         current_bar_voltage = mc.get_eng_notation(current_bar.voltage.real)
-        current_bar.voltage = d.get_primetive_struct(sp.Voltage(current_bar_voltage[0],
+        current_bar.voltage = d.get_primitive_struct(sp.Voltage(current_bar_voltage[0],
                                                                 current_bar_voltage[1],
                                                                 'V'), 'base')
         return current_bar.voltage
 
     def findFirstKnowVoltageBar(self, bars):
-        """This method returns the first known voltage of a adjacent bar of the current bar.
-
-        :param bars: A list with all the instances of Bars().
-        :type bars: [Bar(1st instance), Bars(2nd instance), ...].
-        :return: Returns the voltage of the first adjacente bar with a known voltage.
-        :rtype: float.
-        """
         for adjacent in self.adjacents:
             if bars[adjacent].id != 0 and bars[adjacent].voltage:
                 return bars[adjacent]
+
+    def get_bars_iter(self):
+        return [i for i in range(len(Bars.instances) + 1)]
+
+    @classmethod
+    def del_instances(cls):
+        cls.instances = []
+
+
+class Generic():
+    instances = []
+    
+    def get_id(self):
+        return len(Generic.instances)
+
+    def add_instance(self):
+        Generic.instances.append(self)
+    
+    def __init__(self, type=None, terminals=None, power=None, pf=None, characteristic=None, impedance=None, admittance=None, voltage_t0=None, voltage_t1=None) -> None:
+        self.id = self.get_id()
+        self.type = type
+        super().__init__(terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic)
+        self.add_instance()
+
+    def set_name(self, type):
+        self.type = type
 
     @classmethod
     def del_instances(cls):

@@ -4,7 +4,7 @@ import pandas as pd
 class DefaultDictFormat():
     """This class is responsable for hosting the static method get_dict_struct."""
     @staticmethod
-    def get_primetive_struct(value, key=None):
+    def get_primitive_struct(value, key=None):
         """This method returns a dictionary in the following structure: {'nominal': nominal, 'base': None, 'pu': None} when just the nominal parameter is given and the folowing: {'nominal': nominal, 'base': Base, 'pu': None} when the optional parameter is given.
 
         :param nominal: Object to be used as value under the key 'nominal'.
