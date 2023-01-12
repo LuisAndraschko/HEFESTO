@@ -5,7 +5,7 @@ import app.sys_components as sc
 import app.operations as op
 
 
-################################## Leitura de dados e instanciação de objetos ####################################
+############################################### Leitura de dados ########################################################
 class ExcelToComponents():
     instances = []
 
@@ -23,13 +23,15 @@ class ExcelToComponents():
         self.add_instance()
 
     def create_all(self):
-        df = pd.DataFrame(self.excel)
+        df = pd.DataFrame(self.excel).fillna('')
         component = None
         element_type_column_index = df.columns.get_loc('Tipo do Elemento')
         element_value_column_index = df.columns.get_loc('Valor do Elemento [pu]')
         t0_column_index = df.columns.get_loc('Terminal [0]')
         t1_column_index = df.columns.get_loc('Terminal [1]')
 
+        # Assuring ground bar
+        sc.Bars(0)
         for row_index, _ in df.iterrows():    
             element_type = df.iloc[row_index, element_type_column_index]
             mag = str(df.iloc[row_index, element_value_column_index]).replace(",", ".")
@@ -67,21 +69,20 @@ class ConvToComponents():
         self.add_instance()
 
     def create_all(self):
-        mc = op.MagConversion()
         aux = []
         for component in self.component_list:
             if component.name == 'Linha de Trasmissão Média':
                 # Creating Components
                 name_series = 'Admitância Série'
                 name_shunt = 'Admitância Shunt'
-                y_mag_series = mc.get_value(component.admittance[0])
-                y_mag_shunt = mc.get_value(component.admittance[1])
-                series = sc.Generic(name_series, component.terminals, admittance=y_mag_series)
-                shunt_1 = sc.Generic(name_shunt, (0, component.terminals[0]), admittance=y_mag_shunt)
-                shunt_2 = sc.Generic(name_shunt, (0, component.terminals[1]), admittance=y_mag_shunt)
+                y_series = component.admittance[0]['pu']
+                y_shunt = component.admittance[1]['pu']
+                series = sc.Generic(terminals=component.terminals, admittance=y_series, type=name_series)
+                shunt_1 = sc.Generic(terminals=(0, component.terminals[0]), admittance=y_shunt, type=name_shunt)
+                shunt_2 = sc.Generic(terminals=(0, component.terminals[1]), admittance=y_shunt, type=name_shunt)
                 # Inserting new components in aux list
                 for new_component in (series, shunt_1, shunt_2):
-                    self.aux.append(new_component)
+                    aux.append(new_component)
             else:
                 aux.append(component)
         self.component_list = aux
@@ -105,43 +106,42 @@ class FormToComponents():
     def not_null(self):
         self.isnull = False
 
-    def add_component(self, temp_form, name) -> None:
-        series_impedance_mag = complex(temp_form.series_impedance_mag.data)
-        series_impedance_terminals = (temp_form.t0.data, temp_form.t1.data)
-        series_impedance = Impedance(series_impedance_mag, series_impedance_terminals, 'Impedância Série')
-        self.component_list['impedance']['series'].append(series_impedance)
-        self.not_null()
-
-    def add_series_impedance(self, temp_form) -> None:
-        series_impedance_mag = complex(temp_form.series_impedance_mag.data)
-        series_impedance_terminals = (temp_form.t0.data, temp_form.t1.data)
-        series_impedance = Impedance(series_impedance_mag, series_impedance_terminals, 'Impedância Série')
-        self.component_list['impedance']['series'].append(series_impedance)
-        self.not_null()
-
-
-    def add_shunt_impedance(self, temp_form) -> None:
-        shunt_impedance_mag = complex(temp_form.shunt_impedance_mag.data)
-        shunt_impedance_terminals = (0, temp_form.t1.data)
-        shunt_impedance = Impedance(shunt_impedance_mag, shunt_impedance_terminals, 'Impedância Shunt')
-        self.component_list['impedance']['shunt'].append(shunt_impedance)
-        self.not_null()
-
-    def add_series_admittance(self, temp_form) -> None:
-        series_admittance_mag = complex(temp_form.series_admittance_mag.data)
-        series_admittance_terminals = (temp_form.t0.data, temp_form.t1.data)
-        series_admittance = Impedance(series_admittance_mag, series_admittance_terminals, 'Admitância Série')
-        self.component_list['admittance']['series'].append(series_admittance)
-        self.not_null()
-
-    def add_shunt_admittance(self, temp_form) -> None:
-        shunt_admittance_mag = complex(temp_form.shunt_admittance_mag.data)
-        shunt_admittance_terminals = (0, temp_form.t1.data)
-        shunt_admittance = Impedance(shunt_admittance_mag, shunt_admittance_terminals, 'Admitância Shunt')
-        self.component_list['admittance']['shunt'].append(shunt_admittance)
+    def add_component(self, temp_form) -> None:
+        if temp_form.__class__.__name__ == 'PuSeriesImpedanceForm':
+            series_impedance_mag = complex(temp_form.series_impedance_mag.data)
+            series_impedance_terminals = (temp_form.t0.data, temp_form.t1.data)
+            component = sc.Generic('Impedância Série', 
+                                    series_impedance_terminals, 
+                                    admittance=sp.Impedance(series_impedance_mag, '', 'pu', cnx_type='Série'))
+            self.component_list.append(component)
+            sc.Bars(series_impedance_terminals)
+        elif temp_form.__class__.__name__ == 'PuShuntImpedanceForm':
+            shunt_impedance_mag = complex(temp_form.shunt_impedance_mag.data)
+            shunt_impedance_terminals = (0, temp_form.t1.data)
+            component = sc.Generic('Impedância Shunt', 
+                                    shunt_impedance_terminals, 
+                                    admittance=sp.Impedance(shunt_impedance_mag, '', 'pu', cnx_type='Shunt'))
+            self.component_list.append(component)
+            sc.Bars(shunt_impedance_terminals)
+        elif temp_form.__class__.__name__ == 'PuSeriesAdmittanceForm':
+            series_admittance_mag = complex(temp_form.series_admittance_mag.data)
+            series_admittance_terminals = (temp_form.t0.data, temp_form.t1.data)
+            component = sc.Generic('Admitância Série', 
+                                    series_admittance_terminals, 
+                                    admittance=sp.Admittance(series_admittance_mag, '', 'pu', cnx_type='Série'))
+            self.component_list.append(component)
+            sc.Bars(series_admittance_terminals)            
+        elif temp_form.__class__.__name__ == 'PuShuntAdmittanceForm':
+            shunt_admittance_mag = complex(temp_form.shunt_admittance_mag.data)
+            shunt_admittance_terminals = (0, temp_form.t1.data)
+            component = sc.Generic('Admitância Shunt', 
+                                    shunt_admittance_terminals, 
+                                    admittance=sp.Admittance(shunt_admittance_mag, '', 'pu', cnx_type='Shunt'))
+            self.component_list.append(component)
+            sc.Bars(shunt_admittance_terminals)     
         self.not_null()
                         
-######################################################################################################            
+############################################### instanciação de objetos  #######################################################            
 class ComponentsToMatrix():
     instances = []
 
@@ -165,18 +165,20 @@ class ComponentsToMatrix():
         self.isnull = False
 
     def generate_admittance_matrix(self):
+        mc = op.MagConversion()
         # Get bars
         bars = sc.Bars.get_bars()
-        # Setting adjacent bars
-        for bar in bars: 
-            if bar.id != 0:
-                bar.set_adjacent(self.component_list)
-        self.matrix_iter = sc.Bars.get_bars_iter()[:-1]
-        bars_iter = bars_iter[1:]
+        # Set Adjacent bars
+        for bar in bars:
+            bar.set_adjacent(self.component_list)
+        # Set Matrix
+        bar_id_list = sc.Bars.get_bars_iter()
+        self.matrix_iter = bar_id_list[:-1]
+        bars_iter = bar_id_list[1:]
         self.n = len(bars_iter)
         self.a_matrix = np.zeros((self.n, self.n), dtype=complex)
         admittance_sum = complex(0)
-
+        # Generate admittance matrix
         for i_bar in bars_iter:
             for j_bar in bars_iter:
                 # If element in main diagonal
@@ -185,9 +187,11 @@ class ComponentsToMatrix():
                     for component in self.component_list:
                         if i_bar in component.terminals:
                             if component.impedance:
-                                admittance_sum += pow(complex(component.impedance.mag), -1)
+                                component_mag = mc.get_value(component.impedance, 'pu')
+                                admittance_sum += pow(complex(component_mag), -1)
                             elif component.admittance:
-                                admittance_sum += complex(component.admittance)
+                                component_mag = mc.get_value(component.admittance)
+                                admittance_sum += complex(component_mag)
                     self.a_matrix[i_bar - 1][j_bar - 1] = admittance_sum
                     admittance_sum = 0
                 else:
@@ -195,9 +199,12 @@ class ComponentsToMatrix():
                     for component in self.component_list:
                         if i_bar in component.terminals and j_bar in component.terminals:
                             if component.impedance: 
-                                self.a_matrix[i_bar - 1][j_bar - 1] = -pow(complex(component.impedance.mag), -1)
+                                component_mag = mc.get_value(component.impedance, 'pu')
+                                self.a_matrix[i_bar - 1][j_bar - 1] = -pow(complex(component_mag), -1)
                             elif component.admittance:
-                                self.a_matrix[i_bar - 1][j_bar - 1] = -complex(component.admittance.mag)
+                                component_mag = mc.get_value(component.admittance)
+                                self.a_matrix[i_bar - 1][j_bar - 1] = -complex(component_mag)
+                            break
         self.not_null()
 
 

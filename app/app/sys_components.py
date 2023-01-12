@@ -1,3 +1,4 @@
+import pandas as pd
 import app.sys_primetives as sp
 import app.operations as op
 
@@ -192,31 +193,79 @@ class Bars():
     instances = []
 
     @classmethod
+    def get_bars_df(cls):
+        bars = Bars.get_bars()[1:]
+        df_dict = {'Barra': [],
+                   'Tipo de Barra': [],
+                   'Tensão': [],
+                   'Potência de Geração': [],
+                   'Potência de Carga': []}
+
+        for bar in bars:
+            for attr, value in bar.__dict__.items():
+                if 'id' in attr:
+                    df_dict['Barra'].append(value)
+                elif 'bar_type' in attr:
+                    df_dict['Tipo de Barra'].append(value)
+                elif 'voltage' in attr:
+                    df_dict['Tensão'].append(value['pu'].mag)
+                elif 'power_in' in attr:
+                    if value:
+                        df_dict['Potência de Geração'].append(value['pu'].mag)
+                    else:
+                        df_dict['Potência de Geração'].append(0)
+                elif 'power_out' in attr:
+                    if value:
+                        df_dict['Potência de Carga'].append(value['pu'].mag)
+                    else:
+                        df_dict['Potência de Carga'].append(0)
+                    
+                    
+        df = pd.DataFrame(df_dict)
+        return df
+
+    @classmethod
     def get_bars(cls):
         return cls.instances
+
+    @classmethod
+    def order_bars(cls):
+        bars = cls.instances
+        n = len(bars)
+        ordered = [None for i in range(n)]
+        for bar in cls.instances:
+            ordered[bar.id] = bar
+        cls.instances = ordered
 
     def add_instance(self):
         Bars.instances.append(self)
     
     def __init__(self, id=None, bar_type=None, adjacents=None, isVisited=None, voltage=None, 
-                active_power_in=None, reactive_power_in=None) -> None:
+                power_in=None, power_out=None) -> None:
         self.id = id
         self.name = 'Barra'
         self.bar_type = bar_type
         self.adjacents = adjacents
         self.isVisited = isVisited
         self.voltage = voltage
-        self.active_power_in = active_power_in
-        self.reactive_power_in = reactive_power_in
+        self.power_in = power_in
+        self.power_out = power_out
+        self.check_id_format()
         self.check_existance()
+
+    def check_id_format(self):
+        if isinstance(self.id, tuple):
+            Bars(self.id[0])
+            Bars(self.id[1])
 
     def check_existance(self):
         exist = False
-        for bar in Bars.instances:
-            if self.id == bar.id:
-                exist = True
-        if not exist:
-            self.add_instance()
+        if not isinstance(self.id, tuple):
+            for bar in Bars.instances:
+                if self.id == bar.id:
+                    exist = True
+            if not exist:
+                self.add_instance()
                 
     def set_id(self, id) -> None:
         self.id = id
@@ -228,10 +277,11 @@ class Bars():
         self.adjacents = []
         for component in components:
             if self.id in component.terminals:
-                if self.id != component.terminals[0]:
+                if self.id != component.terminals[0] and component.terminals[0] != 0:
                     self.adjacents.append(component.terminals[0])
-                else:
+                elif component.terminals[1] != 0:
                      self.adjacents.append(component.terminals[1])
+        self.adjacents = [*set(self.adjacents)]
 
     def set_isVisited(self, isVisited) -> None:
         self.isVisited = isVisited
@@ -241,12 +291,18 @@ class Bars():
             self.voltage[key] = voltage
         else:
             self.voltage = voltage
-
-    def set_active_power_in(self, active_power_in) -> None:
-        self.active_power_in = active_power_in
-
-    def set_reactive_power_in(self, reactive_power_in) -> None:
-        self.reactive_power_in = reactive_power_in
+    
+    def set_power_in(self, power_in, key=None) -> None:
+        if key:
+            self.power_in[key] = power_in
+        else:
+            self.power_in = power_in
+        
+    def set_power_out(self, power_out, key=None) -> None:
+        if key:
+            self.power_out[key] = power_out
+        else:
+            self.power_out = power_out
 
     def set_voltages(self, components, bars) -> None:
         aux = self 
@@ -302,15 +358,21 @@ class Bars():
             if bars[adjacent].id != 0 and bars[adjacent].voltage:
                 return bars[adjacent]
 
-    def get_bars_iter(self):
-        return [i for i in range(len(Bars.instances) + 1)]
+    @staticmethod
+    def get_bars_iter():
+        ul_id_list = [bar.id for bar in Bars.instances]
+        ul_id_list.sort()
+        if 0 not in ul_id_list:
+            ul_id_list.insert(0, 0)
+        return ul_id_list
+                
 
     @classmethod
     def del_instances(cls):
         cls.instances = []
 
 
-class Generic():
+class Generic(Components):
     instances = []
     
     def get_id(self):
@@ -325,8 +387,6 @@ class Generic():
         super().__init__(terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic)
         self.add_instance()
 
-    def set_name(self, type):
-        self.type = type
 
     @classmethod
     def del_instances(cls):

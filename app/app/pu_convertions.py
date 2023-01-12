@@ -43,7 +43,7 @@ class ExcelToValues():
         return (mag, characteristic)
 
     def pu_conv_sb(self):
-        df = pd.DataFrame(self.system_basis)
+        df = pd.DataFrame(self.system_basis).fillna('')
         # Reading Power
         i_power = df.columns.get_loc('Potência de base')
         power = self.get_mag_mult_measure(df, 0, i_power)
@@ -65,9 +65,8 @@ class ExcelToValues():
         ValuesToComponents.sb(sb_values)
 
     def pu_conv_gen(self):
-        df = pd.DataFrame(self.generators)
+        df = pd.DataFrame(self.generators).fillna('')
         generators = []
-        
         i_power = df.columns.get_loc('Potência')
         i_voltage = df.columns.get_loc('Tensão')
         i_impedance = df.columns.get_loc('Impedância')
@@ -99,7 +98,7 @@ class ExcelToValues():
         ValuesToComponents.generator(generators)
 
     def pu_conv_tran(self):
-        df = pd.DataFrame(self.transformers)
+        df = pd.DataFrame(self.transformers).fillna('')
         transformers = []
         
         i_power = df.columns.get_loc('Potência')
@@ -142,7 +141,7 @@ class ExcelToValues():
         ValuesToComponents.transformer(transformers)
 
     def pu_conv_short_tline(self):
-        df = pd.DataFrame(self.short_tlines)
+        df = pd.DataFrame(self.short_tlines).fillna('')
         short_tlines = []
         
         i_series_impedance = df.columns.get_loc('Impedância Série')
@@ -154,6 +153,7 @@ class ExcelToValues():
             t0, t1 = row['Terminal 1'], row['Terminal 2']
             # Reading lenght
             lenght = row['Comprimento da LT (km)']
+            if lenght == '': lenght = 0
             # Packing Values
             short_tline_values = {
                 'series_impedance_mag': series_impedance[0], 
@@ -168,7 +168,7 @@ class ExcelToValues():
         ValuesToComponents.short_tline(short_tlines)
 
     def pu_conv_medium_tline(self):
-        df = pd.DataFrame(self.medium_tlines)
+        df = pd.DataFrame(self.medium_tlines).fillna('')
         medium_tlines = []
         
         i_series_impedance = df.columns.get_loc('Impedância Série')
@@ -183,6 +183,7 @@ class ExcelToValues():
             t0, t1 = row['Terminal 1'], row['Terminal 2']
             # Reading lenght
             lenght = row['Comprimento da LT (km)']
+            if lenght == '': lenght = 0
             # Packing Values
             medium_tline_values = {
                 'series_impedance_mag': series_impedance[0], 
@@ -200,7 +201,7 @@ class ExcelToValues():
         ValuesToComponents.medium_tline(medium_tlines)
 
     def pu_conv_load(self):
-        df = pd.DataFrame(self.loads)
+        df = pd.DataFrame(self.loads).fillna('')
         loads = []
         
         i_power = df.columns.get_loc('Potência')

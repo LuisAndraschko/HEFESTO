@@ -15,7 +15,9 @@ import app.matrix_reduction as mr
 import app.system_cnx_validation as scv
 import app.round as round
 import app.sys_components as sc
-import app.pfc as pfc
+import app.pfc as pfcm
+
+
 
 titles = ['Pu Conversion Tool', 'Register', 'Login']
 
@@ -101,9 +103,10 @@ def pu_conversion_results():
     print_template = round.PrepareForTemplate()
 
     if clear_obj_form.submit_clear.data:
-        component_list = pucv.ClearObjects.clear_all()
+        ClearObjects.clear_all()
         return redirect(url_for('pu_conversion'))
     if generate_matrix_form.submit_matrix.data:
+        gam.ConvToComponents(component_list[1:])
         return redirect(url_for('admittance_matrix_results'))
     return render_template("pu_conversion_results.html", title='Conversão Pu - Resultados', 
                             clear_obj_form=clear_obj_form, generate_matrix_form=generate_matrix_form,
@@ -121,44 +124,37 @@ def admittance_matrix():
     pu_submit_form = PuAdmittanceForm()
 
     form_to_components = gam.FormToComponents()
-    component_check = False
+    excel_to_components = None
 
     # PROCESSAMENTO : 
     if file_form.submit_file.data:
         if file_form.validate_on_submit():
             excel_to_components = gam.ExcelToComponents(file_form.upload_file.data)
-            gam.ComponentsToMatrix(excel_to_components.component_list)
-            return redirect(url_for('admittance_matrix_results'))
+            pu_submit_form.submit_pu_a.data = True
     if pu_zs_form.submit_pu_zs_form.data:
         if pu_zs_form.validate_on_submit():
-            gam.FormToComponents.add_component(pu_zs_form)
+            form_to_components.add_component(pu_zs_form)
     if pu_zsh_form.submit_pu_zsh_form.data:
         if pu_zsh_form.validate_on_submit():
-            form_to_components = form_to_components.instances[1]
-            component_check = True
-            form_to_components = form_to_components.add_shunt_impedance(pu_zsh_form)
+            form_to_components.add_component(pu_zsh_form)
     if pu_as_form.submit_pu_as_form.data:
         if pu_as_form.validate_on_submit():
-            form_to_components = form_to_components.instances[1]
-            component_check = True
-            form_to_components = form_to_components.add_series_admittance(pu_as_form)
+            form_to_components.add_component(pu_as_form)
     if pu_ash_form.submit_pu_ash_form.data:
         if pu_ash_form.validate_on_submit():
-            form_to_components = form_to_components.instances[1]
-            component_check = True
-            form_to_components = form_to_components.add_series_admittance(pu_ash_form)
+            form_to_components.add_component(pu_ash_form)
     if pu_submit_form.submit_pu_a.data:
-        # Rodar geração de matriz
-        form_to_components = form_to_components.instances[1]
-        values = form_to_components.struct
-        valid_system_connections = gam.Validation.validate_system_connections(values)
+        if excel_to_components:
+            component_list = excel_to_components.component_list
+        else:
+            component_list = form_to_components.component_list
+        valid_system_connections = scv.Validation.validate_system_connections(component_list)
         if valid_system_connections:
             return redirect(url_for('admittance_matrix_results'))
             
     return render_template("admittance_matrix.html", 
                             pu_zs_form=pu_zs_form, pu_zsh_form=pu_zsh_form, pu_as_form=pu_as_form, pu_ash_form=pu_ash_form,
-                            pu_submit_form=pu_submit_form, file_form=file_form, form_to_components=form_to_components,
-                            component_check=component_check,
+                            pu_submit_form=pu_submit_form, file_form=file_form,
                             title='Matrix de Admitância Nodal')
 
 @app.route("/admittance_matrix_results", methods=['GET', 'POST'])
@@ -180,29 +176,14 @@ def admittance_matrix_results():
         return redirect(url_for('matrix_reduction'))
 
     if 'conversion' in request.referrer:
-        component_list = pucv.ValuesToComponents.get_components()
-        conv_to_components = gam.ConvToComponents(component_list[1:])
-        a_matrix_class = gam.ComponentsToMatrix(conv_to_components.component_list)
-        return render_template("admittance_matrix_results.html", 
-                            title='Matrix de Admitância Nodal - Resultados', 
-                            a_matrix_class=a_matrix_class, print_template=print_template, 
-                            go_to_pu_conv_form=go_to_pu_conv_form, 
-                            go_to_admittance_form=go_to_admittance_form,
-                            go_to_reduction_form=go_to_reduction_form)
+        component_list = gam.ConvToComponents.instances[-1].component_list
     elif 'admittance_matrix' in request.referrer:
         # If am.FormToValues.instances[1].isnull True Form hasn't been used, therefore Excel has
-        if not gam.FormToComponents.instances[1].isnull:
-            component_list = gam.FormToComponents.instances[1].struct
-            a_matrix_class = gam.ValuesToMatrix(component_list)
+        if gam.FormToComponents.instances[-1].isnull:
+            component_list = gam.ExcelToComponents.instances[-1].component_list
         else:
             # When form has been used
-            a_matrix_class = gam.ValuesToMatrix.instances[0]
-        return render_template("admittance_matrix_results.html", 
-                            title='Matrix de Admitância Nodal - Resultados', 
-                            a_matrix_class=a_matrix_class, print_template=print_template,
-                            go_to_pu_conv_form=go_to_pu_conv_form, 
-                            go_to_admittance_form=go_to_admittance_form,
-                            go_to_reduction_form=go_to_reduction_form)
+            component_list = gam.FormToComponents.instances[-1].component_list
     elif 'matrix_reduction' in request.referrer: 
         kron_reduction_class = mr.KronReduction.instances[-1]
         kron_reduction_class.reduce()
@@ -212,17 +193,21 @@ def admittance_matrix_results():
                             go_to_pu_conv_form=go_to_pu_conv_form, 
                             go_to_admittance_form=go_to_admittance_form,
                             go_to_reduction_form=go_to_reduction_form)
-                
+    a_matrix_class = gam.ComponentsToMatrix(component_list)
+    return render_template("admittance_matrix_results.html", 
+                        title='Matrix de Admitância Nodal - Resultados',  
+                        a_matrix_class=a_matrix_class, print_template=print_template, 
+                        go_to_pu_conv_form=go_to_pu_conv_form, 
+                        go_to_admittance_form=go_to_admittance_form,
+                        go_to_reduction_form=go_to_reduction_form)
+            
 @app.route("/matrix_reduction", methods=['GET', 'POST'])
 def matrix_reduction():
     del_bar_form = EliminateBarForm()
     if del_bar_form.submit_bar.data:
         if del_bar_form.validate_on_submit():  
             if not mr.KronReduction.instances:
-                if gam.ValuesToMatrix.instances:
-                    a_matrix_class = gam.ValuesToMatrix.instances[0]
-                else:
-                    return redirect(url_for("matrix_reduction"))
+                a_matrix_class = gam.ComponentsToMatrix.instances[-1]
             else:
                 a_matrix_class = mr.KronReduction.instances[-1]
             mr.KronReduction(a_matrix_class.a_matrix, del_bar_form.bar.data)
@@ -232,25 +217,62 @@ def matrix_reduction():
                             title='Redução Matricial',
                             del_bar_form=del_bar_form)
 
-@app.route("/pfc_input", methods=['GET', 'POST'])
-def pfc_input():
+@app.route("/pfc", methods=['GET', 'POST'])
+def pfc():
 
     file_form = ExcelForm()
-    print_template = pucv.PrepareForTemplate()
-
+    excel_to_components = None
 
     if file_form.submit_file.data:
         if file_form.validate_on_submit():
-            excel_to_values = gam.ExcelToComponents(file_form.upload_file.data)
-            a_matrix_class = gam.ValuesToMatrix(excel_to_values.struct)
-            return render_template("pfc_results.html", 
-                            title='PFC - Resultados',
-                            a_matrix_class=a_matrix_class,
-                            print_template=print_template)
-            
-    return render_template("pfc_input.html", 
+            excel_to_components = gam.ExcelToComponents(file_form.upload_file.data)
+            excel_to_bars = pfcm.ExcelToBars(file_form.upload_file.data) 
+
+    if excel_to_components:
+        return redirect(url_for("pfc_results"))
+    return render_template("pfc.html", 
                             title='Problema do Fluxo de Carga',
                             file_form=file_form)
+
+@app.route("/pfc_results", methods=['GET', 'POST'])
+def pfc_results():
+    tables = []
+
+    go_to_pu_conv_form = GoToPuConvForm()
+    go_to_admittance_form = GoToAdmittanceForm()
+    go_to_reduction_form = GoToMatrixReductionForm()
+    
+    print_template = round.PrepareForTemplate()
+    clear = ClearObjects()
+
+
+    if go_to_pu_conv_form.submit_to_pu.data:
+        clear.clear_all()  
+        return redirect(url_for('pu_conversion'))
+    if go_to_admittance_form.submit_to_matrix.data:
+        clear.clear_all()  
+        return redirect(url_for('admittance_matrix'))
+    if go_to_reduction_form.submit_to_reduction.data:
+        return redirect(url_for('matrix_reduction'))
+
+    if 'pfc' in request.referrer:
+        component_list = gam.ExcelToComponents.instances[-1].component_list
+        a_matrix_class = gam.ComponentsToMatrix(component_list)
+        bars_df = sc.Bars.get_bars_df()
+        power_eq = pfcm.PowerEquations(a_matrix_class)
+        power_eq.evaluate()
+        
+        
+    
+    a_matrix_class = gam.ComponentsToMatrix(component_list)
+    return render_template("pfc_results.html", 
+                        title='Problema do Fluxo de Carga - Resultados',  
+                        a_matrix_class=a_matrix_class, 
+                        bars_df=bars_df,
+                        print_template=print_template, 
+                        go_to_pu_conv_form=go_to_pu_conv_form, 
+                        go_to_admittance_form=go_to_admittance_form,
+                        go_to_reduction_form=go_to_reduction_form)
 
 
 ####################################### deleting objects ############################################
@@ -268,5 +290,7 @@ class ClearObjects():
         pucv.ValuesToComponents.del_component_list()
         pucv.Run.del_instances()
         gam.ExcelToComponents.del_instances()
+        gam.FormToComponents.del_instances()
         gam.ConvToComponents.del_instances()
         gam.ComponentsToMatrix.del_instances()
+        mr.KronReduction.del_instances()

@@ -42,28 +42,17 @@ class MagConversion():
         }
 
     def get_value(self, eng_notation, key=None):
-        """Returns the corresponding float value given a dict with the key 'nominal' and object in value field with the attribute .multiplier which should correspond with this class instance attribute .multipliers.
-
-        :param eng_notation: Received dict with object of type Voltage(), Impedance() or Power() in the format: {'nominal': object, ...}.
-        :type eng_notation: Dict.
-        :return: A float corresponding to the given engineering notetion.
-        :rtype: float.
-        """
-        if key:
-            if pd.isnull(eng_notation[key].multiplier):
-                eng_notation[key].multiplier = ''
-            return self.multipliers[eng_notation[key].multiplier] * eng_notation[key].mag
-        else:
-            return self.multipliers[eng_notation.multiplier] * eng_notation.mag
+        given_mag = None
+        given_mult = None
+        try:
+            given_mag = eng_notation[key].mag
+            given_mult = eng_notation[key].multiplier
+        except TypeError:
+            given_mag = eng_notation.mag
+            given_mult = eng_notation.multiplier
+        return self.multipliers[given_mult] * given_mag
             
     def get_eng_notation(self, value):
-        """Returns the engineering notation of a given value in the form of a tuple where the 1st element is the string representing the multiplier in the notation and the 2nd element the value associated with the multiplier.
-
-        :param value: A float or int to be converted to engineering notation.
-        :type value: float, int.
-        :return: A tuple containg like (multiplier, value).
-        :rtype: (str, float).
-        """
         for multiplier, meq in self.multipliers.items():
             if value / meq >= 1 and value / meq < 1000:
                 return (value / meq, multiplier)

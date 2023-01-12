@@ -23,4 +23,25 @@
   </table>
 </div>
 
+<div class="row border border-dark rounded p-3 mx-3 my-3">
+  <table class="dataframe data table">
+    <thead>
+      <tr>
+        {% for header in bars_df.columns.values.tolist() %}
+          <th scope="col">{{ header }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for row_index in range(bars_df.shape[0]) %}
+        <tr>
+          {% for col_index in range(bars_df.shape[1]) %}
+            <td>{{ bars_df.iloc[row_index, col_index] }}</td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
 {% endblock content %}
