@@ -126,7 +126,7 @@ class PowerEquations:
             elif row['Tipo de Barra'] == 'PV':
                 npv += 1
 
-        
+        ### F(X[]) e X[]
         f_x = np.zeros(2 * npq + npv)
         x = np.zeros(2 * npq + npv)
         g_matrix, b_matrix = self.split_a_matrix()
@@ -163,19 +163,86 @@ class PowerEquations:
                 p_index += 1
                 p_sum = 0
                 q_sum = 0
-        print("")
+
+        ### JACOBIANA
+        a_mtx = self.a_matrix_cls.a_matrix
+        ## H
+        h_matrix = self.calculate_h_matrix(a_mtx, bars, npq, npv)
+        ## N
+        n_matrix = self.calculate_n_matrix(a_mtx, bars, npq, npv)
+
+    def calculate_n_matrix(self, a_mtx, bars, npq, npv):
+        n_matrix = np.zeros((npq + npv, npq))
+        rows = []
+        for bar in bars[1:]:
+            if "SLACK" not in bar.bar_type:
+                rows.append(bar.id)
+
+        # Itera N
+        for row, bar_row in enumerate(rows):
+            vk, ok = cm.polar(bars[bar_row].voltage['pu'].mag)
+            for idx_col_y, ykm in np.ndenumerate(a_mtx[bar_row - 1]):
+                diagonal_term_y = True if bar_row == (idx_col_y[0] + 1) else False
+                it_reached_n_diagonal = True if idx_col_y[0] > row else False
+                reached_pq_bars = True if idx_col_y[0] >= (npv + 1) else False
+                # Corrected index for bar given Ybus column of iteration
+                bar_y_col = idx_col_y[0] + 1
+                vm, om = cm.polar(bars[bar_y_col].voltage['pu'].mag)
+                okm = ok - om
+                # Corrected index for column in n_matrix given Ybus column of iteration
+                idx_col_n = idx_col_y[0] - 1 - npv
+                # Corrected index for kk column in n_matrix given Ybus row of iteration
+                idx_col_n_kk = row - npv
+                
+                if reached_pq_bars and not diagonal_term_y:
+                    # Elemento kl
+                    n_matrix[row][idx_col_n] += vk * (ykm.real * np.cos(okm) + ykm.imag * np.sin(okm))
+                if not diagonal_term_y:
+                    # Termo do somatório kk
+                    n_matrix[row][idx_col_n_kk] += vm * (ykm.real * np.cos(okm) + ykm.imag * np.sin(okm))
+                else:
+                    n_matrix[row][idx_col_n_kk] += vk * 2 * vk * ykm.real
+        print("")        
+
+    def calculate_h_matrix(self, a_mtx, bars, npq, npv):
+        h_matrix = np.zeros((npq + npv, npq + npv))
+        rows = []
+        for bar in bars[1:]:
+            if "SLACK" not in bar.bar_type:
+                rows.append(bar.id)
+
+        # Itera H => barras PQ e PV
+        for row, bar_row in enumerate(rows):
+            vk, ok = cm.polar(bars[bar_row].voltage['pu'].mag)
+            for idx_col_y, ykm in np.ndenumerate(a_mtx[bar_row - 1]):
+                bar_y_col = idx_col_y[0] + 1
+                isSlack = "SLACK" in bars[bar_y_col].bar_type
+                diagonal = bar_row == bar_y_col
+                vm, om = cm.polar(bars[bar_y_col].voltage['pu'].mag)
+                okm = ok - om
+                if not diagonal:
+                    # Computado exceto na Diagonal Principal
+                    # Porem, se bars[bar_y_col[0]].bar_type == "SLACK":
+                    # Não computar h_matrix[row][idx_col_y[0]]
+                    if not isSlack:
+                        h_matrix[row][idx_col_y[0] - 1] += vk * vm * (ykm.real * np.sin(okm) - ykm.imag * np.cos(okm))
+                    h_matrix[row][row] += vm * (-ykm.real * np.sin(okm) + ykm.imag * np.cos(okm))
+            h_matrix[row][row] *= vk
+                
 
 
 
-        #Pesp e Qesp nas barras.power_in ou power_out - shape(13,)
-        #G e B em g_matrix, b_matrix                  - shape(8, 8)
 
-        #Para cada Pesp Qesp (barra) rodar por todas adjacentes
-        
-        #Adjacentes sobrando zeros
 
-        
 
+
+
+
+
+
+
+
+                
 
 
     def split_a_matrix(self):
