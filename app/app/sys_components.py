@@ -277,11 +277,12 @@ class Bars():
         self.adjacents = []
         for component in components:
             if self.id in component.terminals:
-                if self.id != component.terminals[0] and component.terminals[0] != 0:
+                if self.id == component.terminals[0]:
+                    self.adjacents.append(component.terminals[1])
+                elif self.id == component.terminals[1]:
                     self.adjacents.append(component.terminals[0])
-                elif component.terminals[1] != 0:
-                     self.adjacents.append(component.terminals[1])
         self.adjacents = [*set(self.adjacents)]
+        print("")
 
     def set_isVisited(self, isVisited) -> None:
         self.isVisited = isVisited

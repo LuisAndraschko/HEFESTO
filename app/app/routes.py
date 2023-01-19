@@ -219,25 +219,21 @@ def matrix_reduction():
 
 @app.route("/pfc", methods=['GET', 'POST'])
 def pfc():
-
     file_form = ExcelForm()
     excel_to_components = None
 
     if file_form.submit_file.data:
         if file_form.validate_on_submit():
             excel_to_components = gam.ExcelToComponents(file_form.upload_file.data)
-            excel_to_bars = pfcm.ExcelToBars(file_form.upload_file.data) 
+            pfcm.ExcelToObjs(file_form.upload_file.data) 
+            return redirect(url_for("pfc_results"))
 
-    if excel_to_components:
-        return redirect(url_for("pfc_results"))
     return render_template("pfc.html", 
                             title='Problema do Fluxo de Carga',
                             file_form=file_form)
 
 @app.route("/pfc_results", methods=['GET', 'POST'])
 def pfc_results():
-    tables = []
-
     go_to_pu_conv_form = GoToPuConvForm()
     go_to_admittance_form = GoToAdmittanceForm()
     go_to_reduction_form = GoToMatrixReductionForm()
@@ -258,11 +254,10 @@ def pfc_results():
     if 'pfc' in request.referrer:
         component_list = gam.ExcelToComponents.instances[-1].component_list
         a_matrix_class = gam.ComponentsToMatrix(component_list)
+        tolerance = pfcm.ExcelToObjs.instances[-1].tolerance
+        newton_raphson_cls = pfcm.NewtonRaphson(a_matrix_class, tolerance)
+        newton_raphson_cls.solve()
         bars_df = sc.Bars.get_bars_df()
-        power_eq = pfcm.PowerEquations(a_matrix_class)
-        power_eq.evaluate()
-        
-        
     
     a_matrix_class = gam.ComponentsToMatrix(component_list)
     return render_template("pfc_results.html", 
