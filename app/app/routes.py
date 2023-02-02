@@ -1,4 +1,4 @@
-from flask import render_template, url_for, flash, redirect, request
+from flask import render_template, url_for, flash, redirect, request, send_file
 from app import app
 from app.forms import PuSystemBasisForm, PuGeneratorForm, PuTransformerForm, \
         PuShortTlineForm, PuMediumTlineForm, PuLoadForm, PuForm, ClearPuObjForm, \
@@ -18,6 +18,12 @@ import app.sys_components as sc
 import app.pfc as pfcm
 
 
+
+download_file_paths = {
+    'pu_conversion': './worksheets/puconversion_model_with_data.xlsx',
+    'admittance_matrix': './worksheets/admittance_matrix_model_with_data.xlsx',
+    'pfc': './worksheets/pfc_model_with_data.xlsx'
+}
 
 titles = ['Pu Conversion Tool', 'Register', 'Login']
 
@@ -71,12 +77,10 @@ def pu_conversion():
         if medium_tline_form.validate_on_submit():
             valid_submit = True
             pucv.FormToValues.medium_tline_form_to_value(medium_tline_form)
-        # print(f'/routes -> medium_tline_form.validate -> component_list = {component_list}', file=sys.stderr)
     if load_form.submit_ld.data:
         if load_form.validate_on_submit():
             valid_submit = True
             pucv.FormToValues.load_form_to_value(load_form)
-        # print(f'/routes -> load_form.validate -> component_list = {component_list}', file=sys.stderr)
     if pu_form.submit_pu.data:
         valid_system_connections = scv.Validation.validate_system_connections(component_list[1:])
         if valid_system_connections:
@@ -204,6 +208,11 @@ def admittance_matrix_results():
 @app.route("/matrix_reduction", methods=['GET', 'POST'])
 def matrix_reduction():
     del_bar_form = EliminateBarForm()
+    if request.referrer[-2:] == 'me' or request.referrer[-2:] == '0/':
+        is_request_referrer_home = True
+    else:
+        is_request_referrer_home = False
+
     if del_bar_form.submit_bar.data:
         if del_bar_form.validate_on_submit():  
             if not mr.KronReduction.instances:
@@ -215,7 +224,7 @@ def matrix_reduction():
 
     return render_template("matrix_reduction.html", 
                             title='Redução Matricial',
-                            del_bar_form=del_bar_form)
+                            del_bar_form=del_bar_form, is_request_referrer_home=is_request_referrer_home)
 
 @app.route("/pfc", methods=['GET', 'POST'])
 def pfc():
@@ -268,7 +277,28 @@ def pfc_results():
                         go_to_pu_conv_form=go_to_pu_conv_form, 
                         go_to_admittance_form=go_to_admittance_form,
                         go_to_reduction_form=go_to_reduction_form)
+########################################## to develop ###############################################
+@app.route("/short_circuit", methods=['GET', 'POST'])
+def short_circuit():
+    return render_template("short_circuit.html", 
+                            title='Curto-Circuito')
 
+@app.route("/stability_analysis", methods=['GET', 'POST'])
+def stability_analysis():
+    return render_template("stability_analysis.html", 
+                            title='Análise Básica de Estabilidade')
+
+####################################### Download Models ############################################
+@app.route("/download")
+def download_file():
+    file_path = ''
+    if 'pu' in request.referrer:
+        file_path = download_file_paths['pu_conversion']
+    elif 'admittance' in request.referrer:
+        file_path = download_file_paths['admittance_matrix']
+    elif 'pfc' in request.referrer:
+        file_path = download_file_paths['pfc']
+    return send_file(file_path, as_attachment=True)
 
 ####################################### deleting objects ############################################
 class ClearObjects():

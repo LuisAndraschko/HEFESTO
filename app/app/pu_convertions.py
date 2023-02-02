@@ -233,10 +233,10 @@ class FormToValues():
     def sb_form_to_value(form):
         # Packing Values
         sb_values = {
-        'power_mag': form.power_mag.data,
+        'power_mag': form.power_mag.data.replace(",", '.'),
         'power_mult': form.power_mult.data,
         'power_measure': form.power_measure.data,
-        'voltage_mag': form.voltage_mag.data,
+        'voltage_mag': form.voltage_mag.data.replace(",", '.'),
         'voltage_mult': form.voltage_mult.data,
         'voltage_measure': form.voltage_measure.data,
         'bar': form.bar.data
@@ -247,36 +247,35 @@ class FormToValues():
     def generator_form_to_value(form):
         # Packing Values
         gen_values = {
-        'power_mag': form.power_mag.data,
+        'power_mag': form.power_mag.data.replace(",", '.'),
         'power_mult': form.power_mult.data,
         'power_measure': form.power_measure.data,
         't1': form.t1.data,
-        'voltage_mag': form.voltage_mag.data,
+        'voltage_mag': form.voltage_mag.data.replace(",", '.'),
         'voltage_mult': form.voltage_mult.data,
         'voltage_measure': form.voltage_measure.data,
-        'impedance_mag': form.impedance_mag.data,
+        'impedance_mag': form.impedance_mag.data.replace(",", '.'),
         'impedance_mult': form.impedance_mult.data,
         'impedance_measure': form.impedance_measure.data
         }
-        ValuesToComponents.pu_conv_generator(gen_values)
+        ValuesToComponents.generator(gen_values)
         
     @staticmethod
     def transformer_form_to_value(form):
         # Packing Values
         tran_values = {
-            'power_mag': form.power_mag.data,
+            'power_mag': form.power_mag.data.replace(",", '.'),
             'power_mult': form.power_mult.data,
             'power_measure': form.power_measure.data,
             't0': form.t0.data,
             't1': form.t1.data,
-            'high_voltage_mag': form.high_voltage_mag.data,
+            'high_voltage_mag': form.high_voltage_mag.data.replace(",", '.'),
+            'high_voltage_mult': form.high_voltage_mult.data,
             'high_voltage_measure': form.high_voltage_measure.data,
-            't0': form.t0.data,
-            'low_voltage_mag': form.low_voltage_mag.data,
+            'low_voltage_mag': form.low_voltage_mag.data.replace(",", '.'),
             'low_voltage_mult': form.low_voltage_mult.data,
             'low_voltage_measure': form.low_voltage_measure.data,
-            't1': form.t1.data,
-            'impedance_mag': form.impedance_mag.data,
+            'impedance_mag': form.impedance_mag.data.replace(",", '.'),
             'impedance_mult': form.impedance_mult.data,
             'impedance_measure': form.impedance_measure.data
         }
@@ -288,12 +287,12 @@ class FormToValues():
         short_tline_values = {
             't0': form.t0.data,
             't1': form.t1.data,
-            'series_impedance_mag': form.series_impedance_mag.data,
+            'series_impedance_mag': form.series_impedance_mag.data.replace(",", '.'),
             'series_impedance_mult': form.series_impedance_mult.data,
             'series_impedance_measure': form.series_impedance_measure.data,
-            'lenght': form.lenght.data
+            'lenght': form.lenght.data.replace(",", '.')
         }
-        ValuesToComponents.short_tlin_form_to_value(short_tline_values)
+        ValuesToComponents.short_tline(short_tline_values)
 
     @staticmethod
     def medium_tline_form_to_value(form):
@@ -301,14 +300,13 @@ class FormToValues():
         medium_tline_values = {
             't0': form.t0.data,
             't1': form.t1.data,
-            'series_impedance_mag': form.series_impedance_mag.data,
-            'shunt_impedance_mag': form.shunt_impedance_mag.data,
+            'series_impedance_mag': form.series_impedance_mag.data.replace(",", '.'),
+            'shunt_impedance_mag': form.shunt_impedance_mag.data.replace(",", '.'),
             'series_impedance_mult': form.series_impedance_mult.data,
-            'series_impedance_measure': form.series_impedance_measure.data,
-            'lenght': form.lenght.data,
             'shunt_impedance_mult': form.shunt_impedance_mult.data,
+            'series_impedance_measure': form.series_impedance_measure.data,
             'shunt_impedance_measure': form.shunt_impedance_measure.data,
-            'lenght': form.lenght.data
+            'lenght': form.lenght.data.replace(",", '.')
         }
         ValuesToComponents.medium_tline(medium_tline_values)
 
@@ -316,11 +314,11 @@ class FormToValues():
     def load_form_to_value(form): 
         # Packing Values
         load_values = {
-            'power_mag': form.power_mag.data,
+            'power_mag': form.power_mag.data.replace(",", '.'),
             'power_mult': form.power_mult.data,
             'power_measure': form.power_measure.data,
             't1': form.t1.data,
-            'power_factor_mag': form.power_factor_mag.data,
+            'power_factor_mag': form.power_factor_mag.data.replace(",", '.'),
             'power_factor_characteristic': form.power_factor_characteristic.data
         }
         ValuesToComponents.load(load_values)
@@ -346,26 +344,46 @@ class ValuesToComponents():
         ValuesToComponents.component_list.append(pu_conv)
 
     @staticmethod
-    def generator(generators):
+    def generator(generator):
         d = op.DefaultDictFormat()
-        for gen in generators:
-            tg = (0, gen['bar'])
-            pg = d.get_primitive_struct(sp.Power(complex(gen['power_mag']), gen['power_mult'], gen['power_measure']), 'nominal')
-            vg = d.get_primitive_struct(sp.Voltage(complex(gen['voltage_mag']), gen['voltage_mult'], gen['voltage_measure']), 'nominal')
-            zpug = d.get_primitive_struct(sp.Impedance(complex(gen['impedance_mag']), gen['impedance_mult'], gen['impedance_measure'], 'Série'), 'nominal')
+        if isinstance(generator, List):
+            for gen in generator:
+                tg = (0, int(gen['bar']))
+                pg = d.get_primitive_struct(sp.Power(complex(gen['power_mag']), gen['power_mult'], gen['power_measure']), 'nominal')
+                vg = d.get_primitive_struct(sp.Voltage(complex(gen['voltage_mag']), gen['voltage_mult'], gen['voltage_measure']), 'nominal')
+                zpug = d.get_primitive_struct(sp.Impedance(complex(gen['impedance_mag']), gen['impedance_mult'], gen['impedance_measure'], 'Série'), 'nominal')
+                g = sc.Generators(tg, zpug, pg, vg)
+                ValuesToComponents.bar(tg)
+                ValuesToComponents.component_list.append(g)
+        else:
+            tg = (0, int(generator['bar']))
+            pg = d.get_primitive_struct(sp.Power(complex(generator['power_mag']), generator['power_mult'], generator['power_measure']), 'nominal')
+            vg = d.get_primitive_struct(sp.Voltage(complex(generator['voltage_mag']), generator['voltage_mult'], generator['voltage_measure']), 'nominal')
+            zpug = d.get_primitive_struct(sp.Impedance(complex(generator['impedance_mag']), generator['impedance_mult'], generator['impedance_measure'], 'Série'), 'nominal')
             g = sc.Generators(tg, zpug, pg, vg)
             ValuesToComponents.bar(tg)
             ValuesToComponents.component_list.append(g)
+        
 
     @staticmethod
     def transformer(transformers):
         d = op.DefaultDictFormat()
-        for tran in transformers:
-            tt = (tran['t0'], tran['t1'])
-            zput = d.get_primitive_struct(sp.Impedance(complex(tran['impedance_mag']), tran['impedance_mult'], tran['impedance_measure'], 'Série'), 'nominal')
-            pt = d.get_primitive_struct(sp.Power(complex(tran['power_mag']), tran['power_mult'], tran['power_measure']), 'nominal')
-            vht = d.get_primitive_struct(sp.Voltage(complex(tran['high_voltage_mag']), tran['high_voltage_mult'], tran['high_voltage_measure']), 'nominal')
-            vlt = d.get_primitive_struct(sp.Voltage(complex(tran['low_voltage_mag']), tran['low_voltage_mult'], tran['low_voltage_measure']), 'nominal')
+        if isinstance(transformers, List):
+            for tran in transformers:
+                tt = (tran['t0'], tran['t1'])
+                zput = d.get_primitive_struct(sp.Impedance(complex(tran['impedance_mag']), tran['impedance_mult'], tran['impedance_measure'], 'Série'), 'nominal')
+                pt = d.get_primitive_struct(sp.Power(complex(tran['power_mag']), tran['power_mult'], tran['power_measure']), 'nominal')
+                vht = d.get_primitive_struct(sp.Voltage(complex(tran['high_voltage_mag']), tran['high_voltage_mult'], tran['high_voltage_measure']), 'nominal')
+                vlt = d.get_primitive_struct(sp.Voltage(complex(tran['low_voltage_mag']), tran['low_voltage_mult'], tran['low_voltage_measure']), 'nominal')
+                t = sc.Transformers(tt, zput, pt, vht, vlt)
+                ValuesToComponents.bar(tt)
+                ValuesToComponents.component_list.append(t)
+        else:
+            tt = (transformers['t0'], transformers['t1'])
+            zput = d.get_primitive_struct(sp.Impedance(complex(transformers['impedance_mag']), transformers['impedance_mult'], transformers['impedance_measure'], 'Série'), 'nominal')
+            pt = d.get_primitive_struct(sp.Power(complex(transformers['power_mag']), transformers['power_mult'], transformers['power_measure']), 'nominal')
+            vht = d.get_primitive_struct(sp.Voltage(complex(transformers['high_voltage_mag']), transformers['high_voltage_mult'], transformers['high_voltage_measure']), 'nominal')
+            vlt = d.get_primitive_struct(sp.Voltage(complex(transformers['low_voltage_mag']), transformers['low_voltage_mult'], transformers['low_voltage_measure']), 'nominal')
             t = sc.Transformers(tt, zput, pt, vht, vlt)
             ValuesToComponents.bar(tt)
             ValuesToComponents.component_list.append(t)
@@ -373,12 +391,31 @@ class ValuesToComponents():
     @staticmethod
     def short_tline(short_tlines):
         d = op.DefaultDictFormat()
-        for line in short_tlines:
-            tstl = (line['t0'], line['t1'])
-            zsstl = d.get_primitive_struct(sp.Impedance(complex(line['series_impedance_mag']), 
-                                                line['series_impedance_mult'], 
-                                                line['series_impedance_measure'], 
-                                                float(line['lenght']), 
+        if isinstance(short_tlines, List):
+            for line in short_tlines:
+                try:
+                    line_len = float(line['lenght'])
+                except ValueError:
+                    line_len = 0
+                tstl = (int(line['t0']), int(line['t1']))
+                zsstl = d.get_primitive_struct(sp.Impedance(complex(line['series_impedance_mag']), 
+                                                    line['series_impedance_mult'], 
+                                                    line['series_impedance_measure'], 
+                                                    line_len, 
+                                                    'Série'), 'nominal')
+                stl = sc.ShortTLines(tstl, zsstl)
+                ValuesToComponents.bar(tstl)
+                ValuesToComponents.component_list.append(stl)
+        else:
+            try:
+                line_len = float(short_tlines['lenght'])
+            except ValueError:
+                line_len = 0
+            tstl = (int(short_tlines['t0']), int(short_tlines['t1']))
+            zsstl = d.get_primitive_struct(sp.Impedance(complex(short_tlines['series_impedance_mag']), 
+                                                short_tlines['series_impedance_mult'], 
+                                                short_tlines['series_impedance_measure'], 
+                                                line_len, 
                                                 'Série'), 'nominal')
             stl = sc.ShortTLines(tstl, zsstl)
             ValuesToComponents.bar(tstl)
@@ -387,17 +424,41 @@ class ValuesToComponents():
     @staticmethod
     def medium_tline(medium_tlines):
         d = op.DefaultDictFormat()
-        for line in medium_tlines:
-            tmtl = (line['t0'], line['t1'])
-            zsmtl = d.get_primitive_struct(sp.Impedance(complex(line['series_impedance_mag']), 
-                                                line['series_impedance_mult'], 
-                                                line['series_impedance_measure'], 
-                                                float(line['lenght']), 
+        if isinstance(medium_tlines, List):
+            for line in medium_tlines:
+                try:
+                    line_len = float(line['lenght'])
+                except ValueError:
+                    line_len = 0
+                tmtl = (int(line['t0']), int(line['t1']))
+                zsmtl = d.get_primitive_struct(sp.Impedance(complex(line['series_impedance_mag']), 
+                                                    line['series_impedance_mult'], 
+                                                    line['series_impedance_measure'], 
+                                                    line_len, 
+                                                    'Série'), 'nominal')
+                zshmtl = d.get_primitive_struct(sp.Impedance(complex(line['shunt_impedance_mag']), 
+                                                    line['shunt_impedance_mult'], 
+                                                    line['shunt_impedance_measure'], 
+                                                    line_len, 
+                                                    'Shunt'), 'nominal')
+                mtl = sc.MediumTLines(tmtl, [zsmtl, zshmtl])
+                ValuesToComponents.bar(tmtl)
+                ValuesToComponents.component_list.append(mtl)
+        else:
+            try:
+                line_len = float(medium_tlines['lenght'])
+            except ValueError:
+                line_len = 0
+            tmtl = (int(medium_tlines['t0']), int(medium_tlines['t1']))
+            zsmtl = d.get_primitive_struct(sp.Impedance(complex(medium_tlines['series_impedance_mag']), 
+                                                medium_tlines['series_impedance_mult'], 
+                                                medium_tlines['series_impedance_measure'], 
+                                                line_len, 
                                                 'Série'), 'nominal')
-            zshmtl = d.get_primitive_struct(sp.Impedance(complex(line['shunt_impedance_mag']), 
-                                                line['shunt_impedance_mult'], 
-                                                line['shunt_impedance_measure'], 
-                                                float(line['lenght']), 
+            zshmtl = d.get_primitive_struct(sp.Impedance(complex(medium_tlines['shunt_impedance_mag']), 
+                                                medium_tlines['shunt_impedance_mult'], 
+                                                medium_tlines['shunt_impedance_measure'], 
+                                                line_len, 
                                                 'Shunt'), 'nominal')
             mtl = sc.MediumTLines(tmtl, [zsmtl, zshmtl])
             ValuesToComponents.bar(tmtl)
@@ -406,11 +467,20 @@ class ValuesToComponents():
     @staticmethod
     def load(loads):
         d = op.DefaultDictFormat()
-        for load in loads:
-            tld = (0, load['bar'])
-            pld = d.get_primitive_struct(sp.Power(complex(load['power_mag']), load['power_mult'], load['power_measure']), 'nominal')
-            pf = load['power_factor_mag']
-            pf_char = load['power_factor_characteristic']
+        if isinstance(loads, List):
+            for load in loads:
+                tld = (0, int(load['bar']))
+                pld = d.get_primitive_struct(sp.Power(complex(load['power_mag']), load['power_mult'], load['power_measure']), 'nominal')
+                pf = load['power_factor_mag']
+                pf_char = load['power_factor_characteristic']
+                ld = sc.Loads(tld, pld, pf, pf_char)
+                ValuesToComponents.bar(tld)
+                ValuesToComponents.component_list.append(ld)
+        else:
+            tld = (0, int(loads['bar']))
+            pld = d.get_primitive_struct(sp.Power(complex(loads['power_mag']), loads['power_mult'], loads['power_measure']), 'nominal')
+            pf = loads['power_factor_mag']
+            pf_char = loads['power_factor_characteristic']
             ld = sc.Loads(tld, pld, pf, pf_char)
             ValuesToComponents.bar(tld)
             ValuesToComponents.component_list.append(ld)
@@ -425,7 +495,7 @@ class ValuesToComponents():
 
 
 ####################################### Pu Calculations #############################################
-class PuConvesions():
+class PuConvesions():   
     instances = []
 
     def __init__(self, sys_power, sys_voltage, bar) -> None:
@@ -435,11 +505,11 @@ class PuConvesions():
         :type base_power: float.
         """
         self.name = 'Classe Conversão PU'
-        PuConvesions.instances.append(self)
         self.id = len(PuConvesions.instances)
         self.power = sys_power
         self.voltage = sys_voltage
         self.bar = bar
+        PuConvesions.instances.append(self)
 
     def generator_to_pu(self, bars, components):
         """This method converts the generator nominal voltage and impedance to pu.
@@ -599,7 +669,7 @@ class PuConvesions():
                     line_bz_value = pow(line_bv_value, 2) / system_bs_value
                     line_bz = sp.Impedance(line_bz_value, '', 'Siemens')
                     # Identify line type
-                    if line.name == 'Linha de Transmissão Pequena':
+                    if line.name == 'Linha de Transmissão Curta':
                         # Set Line base impedance
                         line.set_impedance(line_bz, 'base')
                         # Getting line series nominal impedance

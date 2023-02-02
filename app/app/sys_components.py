@@ -112,7 +112,7 @@ class ShortTLines(Components):
     def __init__(self, terminals=None, impedance=None, admittance=None,
                  power=None, voltage_t0=None, voltage_t1=None, pf=None, characteristic=None) -> None:
         self.id = self.get_id()
-        self.name = 'Linha de Transmissão Pequena'
+        self.name = 'Linha de Transmissão Curta'
         super().__init__(terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic)
         self.add_instance()
 

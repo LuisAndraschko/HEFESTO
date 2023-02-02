@@ -11,8 +11,8 @@
                     </svg>
                 </button>
                 <div class="collapse" id="collapse6">
-                    <div class="card card-body">
-                        <form method="POST" action="" enctype="multipart/form-data" class="px-3">
+                    <div class="card card-body px-3">
+                        <form method="POST" action="" enctype="multipart/form-data">
                             {{ file_form.hidden_tag() }}
                             <fieldset>
                                 <div class="form-group">
@@ -31,6 +31,7 @@
                                 {{ file_form.submit_file(class="btn btn-secondary mb-3 mt-1 w-100 disabled") }}
                             {% endif %}
                         </form>
+                        <a class="btn btn-secondary" href="{{ url_for('download_file') }}" role="button">Baixe modelo de planilha aqui!</a>
                     </div>
                 </div>
             </div>

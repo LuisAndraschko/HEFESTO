@@ -191,22 +191,33 @@ class NewtonRaphson:
                             new_voltages_abs = cm.polar(bar.voltage['pu'].mag)[0]
                 new_voltage = sp.Voltage(complex(cm.rect(new_voltages_abs, new_voltages_phase)) , '', 'pu')
                 bar.set_voltage(new_voltage, 'pu')
+        print("")
 
     def solve(self):
         it = 0
         self.set_position_type_relations()
         self.iterate(it)
-        converged = np.all(self.f_x[-1] >= self.tolerance)
+        converged = np.all(np.absolute(self.f_x[-1]) > self.tolerance)
         while(not converged):
             self.update_voltages()
             it = self.iterate(it)
             converged = np.all(self.f_x[-1] >= self.tolerance)
 
     def iterate(self, it):
-        self.evaluate_f_x_and_x(it)
+        f_x, x = self.evaluate_f_x_and_x(it)
         self.evaluate_jacobian()
-        negative_inv_jacobian = np.linalg.inv(np.negative(self.jacobian[-1]))
-        self.x.append(np.add(self.x[-1], negative_inv_jacobian.dot(self.f_x[-1])))
+        inv_jacobian = np.linalg.inv(self.jacobian[-1])
+        is_identity = np.dot(self.jacobian[-1], inv_jacobian)
+
+        jac_df = pd.DataFrame(self.jacobian[-1])
+        inv_df = pd.DataFrame(inv_jacobian)
+        identity_df = pd.DataFrame(is_identity)
+        jac_df.to_excel("HEFESTO-jac.xlsx")  
+        inv_df.to_excel("HEFESTO-inv.xlsx")  
+        identity_df.to_excel("HEFESTO-identity.xlsx")  
+
+        termo_2 = np.matmul(inv_jacobian, f_x)
+        self.x.append(x + termo_2)
         return it + 1
 
     def evaluate_f_x_and_x(self, it):
@@ -216,48 +227,62 @@ class NewtonRaphson:
         bars_total = npq + npv + 1
 
         ### F(X[]) e X[]
-        if it == 0:
-            f_x = np.zeros(2 * npq + npv)
-            x = np.zeros(2 * npq + npv)
-        else:
-            f_x = copy.deepcopy(self.f_x[-1])
-            x = copy.deepcopy(self.x[-1])
+        f_x = np.zeros(2 * npq + npv)
+        x = np.zeros(2 * npq + npv)
             
         # Elements to calculate F(X[])
         power_injection = 0
         pk_somat, qk_somat = 0, 0
+        theta_list, voltage_list = np.zeros(bars_total), np.zeros(bars_total)
         pk_calc_list, qk_calc_list = np.zeros(bars_total), np.zeros(bars_total)
         delta_pk_list, delta_qk_list = np.zeros(bars_total), np.zeros(bars_total)
 
         # Calculate F(X[]) and get X[] from bars
         for iter, bar in enumerate(bars[1:]):
             bar_type = bar.bar_type
+            power_injection = self.get_power_injection(bar)
             if "SLACK" not in bar_type:
+                # Defining and getting bar k interest values
                 bar_k = bar.id - 1
                 vk, ok = cm.polar(bar.voltage['pu'].mag)
                 gkk, bkk = a_mtx[bar_k][bar_k].real, a_mtx[bar_k][bar_k].imag
-                power_injection = self.get_power_injection(bar)
+
+                # Storing voltage and theta
+                voltage_list[iter] = vk
+                theta_list[iter] = ok
+                
+                # Defining and getting bar m interest values
                 for adjacent in bar.adjacents:
                     if adjacent != 0:
                         bar_m = adjacent - 1
                         vm, om = cm.polar(bars[adjacent].voltage['pu'].mag)
                         okm = ok - om
                         gkm, bkm = a_mtx[bar_k][bar_m].real, a_mtx[bar_k][bar_m].imag
+
+                        # Calculating power equations terms
                         pk_somat += vm * (gkm * np.cos(okm) + bkm * np.sin(okm))
-                        if "PQ" in bar_type:
-                            qk_somat += vm * (gkm * np.sin(okm) - bkm * np.cos(okm))
+                        qk_somat += vm * (gkm * np.sin(okm) - bkm * np.cos(okm))
+                
+                # Finishing power equations calculations
                 pk_calc_list[iter] = ((vk ** 2) * gkk) + (vk * pk_somat)
+                qk_calc_list[iter] = -((vk ** 2) * bkk) + (vk * qk_somat)
+
+                # Defining power residues values
                 delta_pk_list[iter] = power_injection.real - pk_calc_list[iter]
+                delta_qk_list[iter] = power_injection.imag - qk_calc_list[iter]
+                
+                # Attributing to F[x] and x 
                 x = self.attribute_x_or_f_x(x, {'type': 'theta', 'value': ok}, bar, npq, npv)
+                f_x = self.attribute_x_or_f_x(f_x, {'type': 'P', 'value': delta_pk_list[iter]}, bar, npq, npv)
                 if "PQ" in bar_type:
-                    qk_calc_list[iter] = -((vk ** 2) * bkk) + (vk * qk_somat)
-                    delta_qk_list[iter] = power_injection.imag - qk_calc_list[iter]
                     f_x = self.attribute_x_or_f_x(f_x, {'type': 'Q', 'value': delta_qk_list[iter]}, bar, npq, npv)
                     x = self.attribute_x_or_f_x(x, {'type': 'v', 'value': vk}, bar, npq, npv)
                 pk_somat = 0
                 qk_somat = 0
+        if not self.x:
+            self.x.append(x)
         self.f_x.append(f_x)
-        self.x.append(x)
+        return f_x, x
 
     def evaluate_jacobian(self):
         a_mtx = self.a_matrix_cls.a_matrix
@@ -464,14 +489,14 @@ class NewtonRaphson:
             if bar_id == current_bar.id:
                 if "PV" in current_bar.bar_type:
                     # Posição para P e O nas PV
-                    vector[position + npq] += value['value']
+                    vector[position + npq] = value['value']
                     break
                 if "PQ" in current_bar.bar_type:
                     # Posição para P e O nas PQ
                     if 'theta' in value['type'] or 'P' in value['type']:
-                        vector[position] += value['value']
+                        vector[position] = value['value']
                     # Posição para Q e V nas PQ
                     else:
-                        vector[position + npq + npv] += value['value']
+                        vector[position + npq + npv] = value['value']
                     break
         return vector
