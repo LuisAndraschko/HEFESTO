@@ -1,10 +1,11 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="row border border-dark rounded px-3 mx-3 my-1">
-  <table class="table">
+<div class="row border border-dark rounded px-3 mx-3 my-1 table-responsive-sm">
+  <p class="h2 m-0 p-0 text-center">Matriz de Admitância Nodal</p>
+  <table class="table table-striped table-hover">
       <thead>
         <tr>
-          <th scope="col">#</th>
+          <th scope="col">Barras</th>
           {% for i in a_matrix_class.matrix_iter %}
             <th scope="col">{{ i + 1 }}</th>
           {% endfor %}
@@ -24,7 +25,8 @@
 </div>
 
 <div class="row border border-dark rounded p-3 mx-3 my-3">
-  <table class="dataframe data table">
+  <p class="h2 m-0 p-0 text-center">Dados das Barras</p>
+  <table class="dataframe data table table-striped table-hover">
     <thead>
       <tr>
         {% for header in bars_df.columns.values.tolist() %}
@@ -36,12 +38,120 @@
       {% for row_index in range(bars_df.shape[0]) %}
         <tr>
           {% for col_index in range(bars_df.shape[1]) %}
-            <td>{{ bars_df.iloc[row_index, col_index] }}</td>
+            {% if col_index > 1 %}
+              <td>{{ print_template.get_rounded_string(bars_df.iloc[row_index, col_index]) }}</td>
+            {% else %}
+              <td>{{ bars_df.iloc[row_index, col_index] }}</td>
+            {% endif %}
           {% endfor %}
         </tr>
       {% endfor %}
     </tbody>
   </table>
 </div>
+
+<div class="row border border-dark rounded p-3 mx-3 my-3">
+  {% for it, f_x in enumerate(f_xs) %}
+    <div class="col-md-3 m-0 p-0">
+      <p class="h2 m-0 p-0 text-center">Vetor de potências - Iteração {{ it + 1 }}</p>
+      <table class="dataframe data table table-striped table-hover">
+        <thead>
+          <tr>
+            <th scope="col">P PV - P PQ - Q PQ</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for idx, value in enumerate(f_x) %}
+            <tr>
+              <td>{{idx + 1}} ➡ {{ print_template.get_rounded_string(value) }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endfor %}
+</div>
+
+<div class="row border border-dark rounded p-3 mx-3 my-3">
+  {% for it, x in enumerate(xs[:-1]) %}
+    <div class="col-md-3 m-0 p-0">
+      <p class="h2 m-0 p-0 text-center">Vetor de Variáveis X - Iteração {{ it + 1 }}</p>
+      <table class="dataframe data table table-striped table-hover">
+        <thead>
+          <tr>
+            <th scope="col">𝜃 PV - 𝜃 PQ - V PQ</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for idx, value in enumerate(x) %}
+            <tr>
+              <td>{{idx}} ➡ {{ print_template.get_rounded_string(value) }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endfor %}
+</div>
+
+<div class="row border border-dark rounded p-3 mx-3 my-3">
+  {% for it, jac in enumerate(jacobians) %}
+    <div class="table-responsive col-lg-12"> 
+      <p class="h2 m-0 pt-1 pb-2 text-center">Jacobiana - Iteração {{ it + 1 }}</p>
+      <table class="dataframe data table table-striped table-hover">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            {% for i in range(jac.shape[1]) %}
+              <th scope="col">{{ i + 1 }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for idx_row, row in enumerate(jac) %}
+            <tr>
+              <td>{{ idx_row + 1 }}</td>
+              {% for idx_col, col in enumerate(row) %}
+                <td>{{ print_template.get_rounded_string(col) }}</td>
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endfor %}
+</div>
+
+<div class="row border border-dark rounded p-3 mx-3 my-3">
+    <div class="col-md-3 m-0 p-0">
+      <p class="h2 m-0 p-0 text-center">Fluxos pelos ramos</p>
+      <table class="dataframe data table table-striped table-hover">
+        <thead>
+          <tr>
+            <th scope="col">Ramo</th>
+            <th scope="col">MW</th>
+            <th scope="col">MVAr</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for component in component_list %}
+            {% if 'Série' in component.type %}
+              <tr>
+                <td>{{component.terminals}} ➡ </td>
+                <td>{{ print_template.get_rounded_string(component.flux_km.real) }}</td>
+                <td>{{ print_template.get_rounded_string(component.flux_km.imag) }}</td>
+              </tr>
+              <tr>
+                <td>({{component.terminals[1]}}, {{component.terminals[0]}}) ➡ </td>
+                <td>{{ print_template.get_rounded_string(component.flux_mk.real) }}</td>
+                <td>{{ print_template.get_rounded_string(component.flux_mk.imag) }}</td>
+              </tr>
+            {% endif %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+</div>
+
 
 {% endblock content %}

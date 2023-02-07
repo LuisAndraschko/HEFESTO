@@ -30,7 +30,17 @@ class Primitives():
             else:
                 self.mag = self.mag * 1000 / self.lenght
             self.measurement_unit = 'ohm'
-        
+
+    def is_equal(self, other):
+        try:
+            equal = self.mag == other.mag
+            equal = equal and self.multiplier == other.multiplier
+            equal = equal and self.measurement_unit == other.measurement_unit
+            equal = equal and self.cnx_type == other.cnx_type
+        except:
+            equal = False
+        return equal
+
 
 class Power(Primitives):
     def __init__(self, mag=None, multiplier=None, measurement_unit=None, lenght=None, cnx_type=None) -> None:

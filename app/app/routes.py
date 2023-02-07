@@ -31,6 +31,7 @@ titles = ['Pu Conversion Tool', 'Register', 'Login']
 @app.route("/")
 @app.route("/home")
 def home():
+    ClearObjects.clear_all()
     return render_template('home.html')
 
 @app.route("/about")
@@ -266,13 +267,26 @@ def pfc_results():
         tolerance = pfcm.ExcelToObjs.instances[-1].tolerance
         newton_raphson_cls = pfcm.NewtonRaphson(a_matrix_class, tolerance)
         newton_raphson_cls.solve()
+        powerflux_cls = pfcm.PowerFluxOperations(a_matrix_class)
+        powerflux_cls.calculate_power_inj()
+        powerflux_cls.calculate_flux()
+
+        f_xs = newton_raphson_cls.f_x
+        xs = newton_raphson_cls.x
+        jacobians = newton_raphson_cls.jacobian
         bars_df = sc.Bars.get_bars_df()
+
     
     a_matrix_class = gam.ComponentsToMatrix(component_list)
     return render_template("pfc_results.html", 
                         title='Problema do Fluxo de Carga - Resultados',  
                         a_matrix_class=a_matrix_class, 
                         bars_df=bars_df,
+                        f_xs=f_xs,
+                        xs=xs,
+                        jacobians=jacobians,
+                        newton_raphson_cls=newton_raphson_cls,
+                        component_list=component_list,
                         print_template=print_template, 
                         go_to_pu_conv_form=go_to_pu_conv_form, 
                         go_to_admittance_form=go_to_admittance_form,
@@ -319,3 +333,4 @@ class ClearObjects():
         gam.ConvToComponents.del_instances()
         gam.ComponentsToMatrix.del_instances()
         mr.KronReduction.del_instances()
+        pfcm.NewtonRaphson.del_instances()

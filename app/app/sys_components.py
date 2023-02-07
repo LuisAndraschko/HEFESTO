@@ -1,6 +1,8 @@
 import pandas as pd
 import app.sys_primetives as sp
 import app.operations as op
+import cmath as cm
+import math as m
 
 class Components():
 
@@ -8,7 +10,7 @@ class Components():
     def del_instances(cls):
         cls.instances = []
 
-    def __init__(self, terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic) -> None:
+    def __init__(self, terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic, flux_km, flux_mk) -> None:
         self.terminals = terminals
         self.impedance = impedance
         self.admittance = admittance
@@ -17,6 +19,8 @@ class Components():
         self.voltage_t1 = voltage_t1
         self.pf = pf
         self.characteristic = characteristic
+        self.flux_km = flux_km
+        self.flux_mk = flux_mk
 
     def set_terminals(self, terminals):
         self.terminals = terminals
@@ -57,6 +61,18 @@ class Components():
     def set_characteristic(self, characteristic):
         self.characteristic = characteristic
 
+    def set_flux_km(self, flux_km):
+        self.flux_km = flux_km
+
+    def set_flux_mk(self, flux_mk):
+        self.flux_mk = flux_mk
+
+    def is_equal(self, other):
+        try:
+            equal = self.terminals == other.terminals
+        except:
+            equal = False
+        return equal
 
 class Generators(Components):
     instances = []
@@ -68,10 +84,10 @@ class Generators(Components):
         return len(Generators.instances)
 
     def __init__(self, terminals=None, impedance=None,
-                 power=None, voltage_t0=None, voltage_t1=None, pf=None, characteristic=None, admittance=None) -> None:
+                 power=None, voltage_t0=None, voltage_t1=None, pf=None, characteristic=None, admittance=None, flux_km=None, flux_mk=None) -> None:
         self.id = self.get_id()
         self.name = 'Gerador'
-        super().__init__(terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic)
+        super().__init__(terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic, flux_km, flux_mk)
         self.add_instance()
      
     @classmethod
@@ -89,10 +105,10 @@ class Transformers(Components):
         Transformers.instances.append(self)
     
     def __init__(self, terminals=None, impedance=None,
-                 power=None, voltage_t0=None, voltage_t1=None, pf=None, characteristic=None, admittance=None) -> None:
+                 power=None, voltage_t0=None, voltage_t1=None, pf=None, characteristic=None, admittance=None, flux_km=None, flux_mk=None) -> None:
         self.id = self.get_id()
         self.name = 'Transformador'
-        super().__init__(terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic)
+        super().__init__(terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic, flux_km, flux_mk)
         self.add_instance()
 
     @classmethod
@@ -110,10 +126,10 @@ class ShortTLines(Components):
         ShortTLines.instances.append(self)
     
     def __init__(self, terminals=None, impedance=None, admittance=None,
-                 power=None, voltage_t0=None, voltage_t1=None, pf=None, characteristic=None) -> None:
+                 power=None, voltage_t0=None, voltage_t1=None, pf=None, characteristic=None, flux_km=None, flux_mk=None) -> None:
         self.id = self.get_id()
         self.name = 'Linha de Transmissão Curta'
-        super().__init__(terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic)
+        super().__init__(terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic, flux_km, flux_mk)
         self.add_instance()
 
     @classmethod
@@ -131,10 +147,10 @@ class MediumTLines(Components):
         MediumTLines.instances.append(self)
     
     def __init__(self, terminals=None, impedance=None, admittance=None,
-                 power=None, voltage_t0=None, voltage_t1=None, pf=None, characteristic=None) -> None:
+                 power=None, voltage_t0=None, voltage_t1=None, pf=None, characteristic=None, flux_km=None, flux_mk=None) -> None:
         self.id = self.get_id()
         self.name = 'Linha de Trasmissão Média'
-        super().__init__(terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic)
+        super().__init__(terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic, flux_km, flux_mk)
         self.add_instance()
 
     def set_impedance(self, impedance, cnx_type=None, key=None):
@@ -178,10 +194,11 @@ class Loads(Components):
     def add_instance(self):
         Loads.instances.append(self)
     
-    def __init__(self, terminals=None, power=None, pf=None, characteristic=None, impedance=None, admittance=None, voltage_t0=None, voltage_t1=None) -> None:
+    def __init__(self, terminals=None, power=None, pf=None, characteristic=None, impedance=None, admittance=None, 
+                 voltage_t0=None, voltage_t1=None, flux_km=None, flux_mk=None) -> None:
         self.id = self.get_id()
         self.name = 'Carga'
-        super().__init__(terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic)
+        super().__init__(terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic, flux_km, flux_mk)
         self.add_instance()
 
     @classmethod
@@ -197,9 +214,11 @@ class Bars():
         bars = Bars.get_bars()[1:]
         df_dict = {'Barra': [],
                    'Tipo de Barra': [],
-                   'Tensão': [],
-                   'Potência de Geração': [],
-                   'Potência de Carga': []}
+                   'Tensão: Módulo PU': [],
+                   'Tensão: Fase Rad': [],
+                   'Tensão: Módulo kV': [],
+                   'Tensão: Fase Graus': [],
+                   'Potência Injetada': []}
 
         for bar in bars:
             for attr, value in bar.__dict__.items():
@@ -208,18 +227,13 @@ class Bars():
                 elif 'bar_type' in attr:
                     df_dict['Tipo de Barra'].append(value)
                 elif 'voltage' in attr:
-                    df_dict['Tensão'].append(value['pu'].mag)
-                elif 'power_in' in attr:
-                    if value:
-                        df_dict['Potência de Geração'].append(value['pu'].mag)
-                    else:
-                        df_dict['Potência de Geração'].append(0)
-                elif 'power_out' in attr:
-                    if value:
-                        df_dict['Potência de Carga'].append(value['pu'].mag)
-                    else:
-                        df_dict['Potência de Carga'].append(0)
-                    
+                    voltage_abs_pu, voltage_phase_rad = cm.polar(value['pu'].mag)
+                    df_dict['Tensão: Módulo PU'].append(voltage_abs_pu)
+                    df_dict['Tensão: Fase Rad'].append(voltage_phase_rad)
+                    df_dict['Tensão: Módulo kV'].append(voltage_abs_pu * value['base'].mag)
+                    df_dict['Tensão: Fase Graus'].append(m.degrees(voltage_phase_rad))
+                elif 'injected_power' in attr:
+                    df_dict['Potência Injetada'].append(value)
                     
         df = pd.DataFrame(df_dict)
         return df
@@ -250,6 +264,7 @@ class Bars():
         self.voltage = voltage
         self.power_in = power_in
         self.power_out = power_out
+        self.injected_power = 0
         self.check_id_format()
         self.check_existance()
 
@@ -382,10 +397,11 @@ class Generic(Components):
     def add_instance(self):
         Generic.instances.append(self)
     
-    def __init__(self, type=None, terminals=None, power=None, pf=None, characteristic=None, impedance=None, admittance=None, voltage_t0=None, voltage_t1=None) -> None:
+    def __init__(self, type=None, terminals=None, power=None, pf=None, characteristic=None, impedance=None, admittance=None, 
+                 voltage_t0=None, voltage_t1=None, flux_km=None, flux_mk=None) -> None:
         self.id = self.get_id()
         self.type = type
-        super().__init__(terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic)
+        super().__init__(terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic, flux_km, flux_mk)
         self.add_instance()
 
 
