@@ -107,7 +107,7 @@ class ExcelToObjs:
         df = pd.DataFrame(self.excel_params).fillna('')
         
         # Get component list to attribute base voltages and power
-        component_list = gam.ExcelToComponents.instances[-1].component_list
+        component_list = sc.Generic.instances
         # Get bars list to attribute base voltages
         bars = sc.Bars.get_bars()
         
@@ -120,7 +120,7 @@ class ExcelToObjs:
         prep_bar_obj = {'id': None, 
                         'base_voltage': None}
 
-        for row_index, row in df.iterrows():
+        for _row_index, row in df.iterrows():
             # Getting bars data
             prep_bar_obj['id'] = row['Barra']
             prep_bar_obj['base_voltage'] = sp.Voltage(row['Tensão de Base'], row['Unnamed: 2'][0], row['Unnamed: 2'][1])
@@ -147,6 +147,7 @@ class ExcelToObjs:
             if not component.power:
                 component.set_power(base_power)
 
+
 class NewtonRaphson:
     instances = []
 
@@ -166,6 +167,8 @@ class NewtonRaphson:
         self.npv = 0
         self.x = []
         self.f_x = []
+        self.p_calc = []
+        self.q_calc = []
         self.jacobian = []
         self.it = 0
         self.converged = False
@@ -238,33 +241,34 @@ class NewtonRaphson:
             bar_type = bar.bar_type
             power_injection = self.get_power_injection(bar)
             bar.injected_power = power_injection
+
+            # Defining and getting bar k interest values
+            bar_k = bar.id - 1
+            vk, ok = cm.polar(bar.voltage['pu'].mag)
+            gkk, bkk = a_mtx[bar_k][bar_k].real, a_mtx[bar_k][bar_k].imag
+            
+            # Defining and getting bar m interest values
+            for adjacent in bar.adjacents:
+                if adjacent != 0:
+                    bar_m = adjacent - 1
+                    vm, om = cm.polar(bars[adjacent].voltage['pu'].mag)
+                    okm = ok - om
+                    gkm, bkm = a_mtx[bar_k][bar_m].real, a_mtx[bar_k][bar_m].imag
+
+                    # Calculating power equations terms
+                    pk_somat += vm * (gkm * np.cos(okm) + bkm * np.sin(okm))
+                    qk_somat += vm * (gkm * np.sin(okm) - bkm * np.cos(okm))
+            
+            # Finishing power equations calculations
+            pk_calc_list[iter] = ((vk ** 2) * gkk) + (vk * pk_somat)
+            qk_calc_list[iter] = -((vk ** 2) * bkk) + (vk * qk_somat)
+
+            # Defining power residues values
+            delta_pk_list[iter] = power_injection.real - pk_calc_list[iter]
+            delta_qk_list[iter] = power_injection.imag - qk_calc_list[iter]
+            
+            # Attributing to F[x] and x 
             if "SLACK" not in bar_type:
-                # Defining and getting bar k interest values
-                bar_k = bar.id - 1
-                vk, ok = cm.polar(bar.voltage['pu'].mag)
-                gkk, bkk = a_mtx[bar_k][bar_k].real, a_mtx[bar_k][bar_k].imag
-                
-                # Defining and getting bar m interest values
-                for adjacent in bar.adjacents:
-                    if adjacent != 0:
-                        bar_m = adjacent - 1
-                        vm, om = cm.polar(bars[adjacent].voltage['pu'].mag)
-                        okm = ok - om
-                        gkm, bkm = a_mtx[bar_k][bar_m].real, a_mtx[bar_k][bar_m].imag
-
-                        # Calculating power equations terms
-                        pk_somat += vm * (gkm * np.cos(okm) + bkm * np.sin(okm))
-                        qk_somat += vm * (gkm * np.sin(okm) - bkm * np.cos(okm))
-                
-                # Finishing power equations calculations
-                pk_calc_list[iter] = ((vk ** 2) * gkk) + (vk * pk_somat)
-                qk_calc_list[iter] = -((vk ** 2) * bkk) + (vk * qk_somat)
-
-                # Defining power residues values
-                delta_pk_list[iter] = power_injection.real - pk_calc_list[iter]
-                delta_qk_list[iter] = power_injection.imag - qk_calc_list[iter]
-                
-                # Attributing to F[x] and x 
                 if self.it == 0:
                     x = self.attribute_x_or_f_x(x, {'type': 'theta', 'value': ok}, bar, npq, npv)
                 f_x = self.attribute_x_or_f_x(f_x, {'type': 'P', 'value': delta_pk_list[iter]}, bar, npq, npv)
@@ -272,8 +276,12 @@ class NewtonRaphson:
                     f_x = self.attribute_x_or_f_x(f_x, {'type': 'Q', 'value': delta_qk_list[iter]}, bar, npq, npv)
                     if self.it == 0:
                         x = self.attribute_x_or_f_x(x, {'type': 'v', 'value': vk}, bar, npq, npv)
-                pk_somat = 0
-                qk_somat = 0
+            pk_somat = 0
+            qk_somat = 0
+        
+        self.p_calc = pk_calc_list
+        self.q_calc = qk_calc_list
+
         if self.it == 0:
             self.x.append(x)
         self.f_x.append(f_x)
@@ -509,10 +517,11 @@ class PowerFluxOperations:
         cls.instances = []
 
     def __init__(self, a_matrix_cls) -> None:
-        self.component_list = gam.ExcelToComponents.instances[-1].component_list
+        self.component_list = sc.Generic.instances
         self.bars = sc.Bars.get_bars()
         self.a_matrix_cls = a_matrix_cls
         self.slack_active_power = 0
+        self.system_power_loss = 0
         
         self.add_instance()
 
@@ -524,70 +533,75 @@ class PowerFluxOperations:
         a_mtx = self.a_matrix_cls.a_matrix
         aux = 0
         for bar in self.bars[1:]:
-            bar.injected_power = 0
-            k_idx = bar.id - 1
-            # Bar voltage slow iteration
-            vk, ok = cm.polar(self.bars[bar.id].voltage['pu'].mag)
-            for adjacent_bar in bar.adjacents:
-                if adjacent_bar != 0:
-                    # adjacent_bar voltage
-                    vm, om = cm.polar(self.bars[adjacent_bar].voltage['pu'].mag)
-                    okm = ok - om
-                    ykm = a_mtx[k_idx][adjacent_bar -1]
-                    gkm, bkm = ykm.real, ykm.imag
-                    # Termo do somatório kk
-                    aux += vm * (gkm * np.cos(okm) + bkm * np.sin(okm))
-            bar.injected_power = ((vk ** 2) * a_mtx[k_idx][k_idx].real) + (vk * aux)
+            if bar.bar_type == 'SLACK':
+                bar.injected_power = 0
+                k_idx = bar.id - 1
+                # Bar voltage slow iteration
+                vk, ok = cm.polar(self.bars[bar.id].voltage['pu'].mag)
+                for adjacent_bar in bar.adjacents:
+                    if adjacent_bar != 0:
+                        # adjacent_bar voltage
+                        vm, om = cm.polar(self.bars[adjacent_bar].voltage['pu'].mag)
+                        okm = ok - om
+                        ykm = a_mtx[k_idx][adjacent_bar -1]
+                        gkm, bkm = ykm.real, ykm.imag
+                        # Termo do somatório kk
+                        aux += vm * (gkm * np.cos(okm) + bkm * np.sin(okm))
+                bar.injected_power = ((vk ** 2) * a_mtx[k_idx][k_idx].real) + (vk * aux)
                 
     def calculate_reactive_power_inj(self):
         a_mtx = self.a_matrix_cls.a_matrix
         aux = 0
         for bar in self.bars[1:]:
-            pk = bar.injected_power
-            k_idx = bar.id - 1
-            # Bar voltage slow iteration
-            vk, ok = cm.polar(self.bars[bar.id].voltage['pu'].mag)
-            for adjacent_bar in bar.adjacents:
-                if adjacent_bar != 0:
-                    m_idx = adjacent_bar -1
-                    # adjacent_bar voltage
-                    vm, om = cm.polar(self.bars[adjacent_bar].voltage['pu'].mag)
-                    okm = ok - om
-                    ykm = a_mtx[k_idx][m_idx]
-                    gkm, bkm = ykm.real, ykm.imag
-                    # Termo do somatório kk
-                    aux += vm * (gkm * np.sin(okm) - bkm * np.cos(okm))
-            qk = -((vk ** 2) * a_mtx[k_idx][k_idx].imag) + (vk * aux)
-            if qk >= 0:
-                bar.injected_power = complex(f'{pk}+{qk}j')
-            else:
-                bar.injected_power = complex(f'{pk}{qk}j')
+            if bar.bar_type != 'PQ':
+                pk = bar.injected_power.real
+                k_idx = bar.id - 1
+                # Bar voltage slow iteration
+                vk, ok = cm.polar(self.bars[bar.id].voltage['pu'].mag)
+                for adjacent_bar in bar.adjacents:
+                    if adjacent_bar != 0:
+                        m_idx = adjacent_bar -1
+                        # adjacent_bar voltage
+                        vm, om = cm.polar(self.bars[adjacent_bar].voltage['pu'].mag)
+                        okm = ok - om
+                        ykm = a_mtx[k_idx][m_idx]
+                        gkm, bkm = ykm.real, ykm.imag
+                        # Termo do somatório kk
+                        aux += vm * (gkm * np.sin(okm) - bkm * np.cos(okm))
+                qk = -((vk ** 2) * a_mtx[k_idx][k_idx].imag) + (vk * aux)
+                if qk >= 0:
+                    bar.injected_power = complex(f'{pk}+{qk}j')
+                else:
+                    bar.injected_power = complex(f'{pk}{qk}j')
     
-    def calculate_flux(self):
+    def calculate_power_flux(self):
         for component in self.component_list:
             if 'Série' in component.type:
                 bar_k, bar_m = component.terminals
 
+
                 vk, ok = cm.polar(self.bars[bar_k].voltage['pu'].mag)
                 vm, om = cm.polar(self.bars[bar_m].voltage['pu'].mag)
                 okm = ok - om
+                cos_okm, sin_okm = np.cos(okm), np.sin(okm)
 
                 ykm = self.get_component_admittance(component)
                 gkm, bkm = ykm.real, ykm.imag
 
                 shunt_km = self.check_for_shunt(bar_k, bar_m)
-                shunt_mk = self.check_for_shunt(bar_m, bar_k)
-                bkm_sh = self.get_component_admittance(shunt_km)
-                bmk_sh = self.get_component_admittance(shunt_mk)
+                bkm_sh = self.get_component_admittance(shunt_km).imag
 
-                pkm = ((vk ** 2) * gkm) - (vk * vm * gkm * np.cos(okm)) - (vk * vm * bkm * np.sin(okm))
-                qkm = -((vk ** 2) * (bkm_sh + bkm)) - (vk * vm * gkm * np.sin(okm)) + (vk * vm * bkm * np.cos(okm))
+                pkm = ((vk ** 2) * gkm) - (vk * vm * gkm * cos_okm) - (vk * vm * bkm * sin_okm)
+                qkm = -((vk ** 2) * (bkm_sh + bkm)) - (vk * vm * gkm * sin_okm) + (vk * vm * bkm * cos_okm)
 
-                pmk = ((vm ** 2) * gkm) - (vk * vm * gkm * np.cos(okm)) + (vk * vm * bkm * np.sin(okm))
-                qmk = -((vm ** 2) * (bmk_sh + bkm)) + (vk * vm * gkm * np.sin(okm)) + (vk * vm * bkm * np.cos(okm))
+                pmk = ((vm ** 2) * gkm) - (vk * vm * gkm * cos_okm) + (vk * vm * bkm * sin_okm)
+                qmk = -((vm ** 2) * (bkm_sh + bkm)) + (vk * vm * gkm * sin_okm) + (vk * vm * bkm * cos_okm)
                 
                 component.flux_km = complex(pkm, qkm) * component.power['base'].mag
                 component.flux_mk = complex(pmk, qmk) * component.power['base'].mag
+                vk, ok, vm, om, okm = 0, 0, 0, 0, 0
+                pkm, qkm, pmk, qmk = 0, 0, 0, 0
+                cos_okm, sin_okm = 0, 0
                 
     def check_for_shunt(self, bar_k, bar_m):
         shunt_list = []
@@ -604,24 +618,18 @@ class PowerFluxOperations:
             if bar_m in component.terminals and 'Shunt' in component.type:
                 shunt_list.append(component)
 
-        for shunt_compare in shunt_list[1:]:
-            try:
-                if shunt_list[0].impedance.is_equal(shunt_compare.impedance):
-                    selected_shunt = shunt_compare
-                    break
-            except AttributeError:
-                if shunt_list[0].admittance.is_equal(shunt_compare.admittance):
-                    selected_shunt = shunt_compare
-                    break
-            try:
-                if shunt_list[0].admittance.is_equal(shunt_compare.impedance):
-                    selected_shunt = shunt_compare
-                    break
-            except AttributeError:
-                if shunt_list[0].impedance.is_equal(shunt_compare.admittance):
-                    selected_shunt = shunt_compare
-                    break
-        
+        for idx_1, shunt_compare_1 in enumerate(shunt_list):
+            for idx_2, shunt_compare_2 in enumerate(shunt_list):
+                if idx_1 != idx_2:
+                    try:
+                        if shunt_compare_1.impedance.is_equal(shunt_compare_2.impedance):
+                            selected_shunt = shunt_compare_1
+                            break
+                    except AttributeError:
+                        if shunt_compare_1.admittance.is_equal(shunt_compare_2.admittance):
+                            selected_shunt = shunt_compare_1
+                            break
+            
         return selected_shunt
     
     def get_component_admittance(self, component):
@@ -632,3 +640,9 @@ class PowerFluxOperations:
             else:
                 admittance = complex(component.admittance.mag)
         return admittance
+    
+    def calculate_power_losses(self):
+        for component in self.component_list:
+            if 'Série' in component.type:
+                component.power_loss = component.flux_km + component.flux_mk
+                self.system_power_loss += component.power_loss

@@ -3,6 +3,7 @@ import numpy as np
 import app.sys_primetives as sp
 import app.sys_components as sc
 import app.operations as op
+import copy
 
 
 ############################################### Leitura de dados ########################################################
@@ -20,7 +21,6 @@ class ExcelToComponents():
         self.excel = pd.read_excel(excel, sheet_name="Componentes")
         self.component_list = []
         self.create_all()
-        self.add_instance()
 
     def create_all(self):
         df = pd.DataFrame(self.excel).fillna('')
@@ -49,8 +49,8 @@ class ExcelToComponents():
                     component = sc.Generic(element_type, terminals, impedance=sp.Impedance(mag, '', 'pu', cnx_type='Shunt'))
                 elif 'Admitância' in element_type:
                     component = sc.Generic(element_type, terminals, admittance=sp.Admittance(mag, '', 'pu', cnx_type='Shunt'))
+            component.add_instance()
             sc.Bars(terminals)
-            self.component_list.append(component)
             
 
 class ConvToComponents():
@@ -69,7 +69,7 @@ class ConvToComponents():
         self.add_instance()
 
     def create_all(self):
-        aux = []
+        copy_components = copy.deepcopy(self.component_list)
         for component in self.component_list:
             if component.name == 'Linha de Trasmissão Média':
                 # Creating Components
@@ -80,12 +80,11 @@ class ConvToComponents():
                 series = sc.Generic(terminals=component.terminals, admittance=y_series, type=name_series)
                 shunt_1 = sc.Generic(terminals=(0, component.terminals[0]), admittance=y_shunt, type=name_shunt)
                 shunt_2 = sc.Generic(terminals=(0, component.terminals[1]), admittance=y_shunt, type=name_shunt)
+                copy_components.remove(component)
                 # Inserting new components in aux list
                 for new_component in (series, shunt_1, shunt_2):
-                    aux.append(new_component)
-            else:
-                aux.append(component)
-        self.component_list = aux
+                    copy_components.append(new_component)
+        self.component_list = copy_components
                 
 
 class FormToComponents():
@@ -99,9 +98,7 @@ class FormToComponents():
         cls.instances = []
 
     def __init__(self) -> None:
-        self.component_list = None
         self.isnull = True
-        self.add_instance()
 
     def not_null(self):
         self.isnull = False
@@ -112,16 +109,16 @@ class FormToComponents():
             series_impedance_terminals = (temp_form.t0.data, temp_form.t1.data)
             component = sc.Generic('Impedância Série', 
                                     series_impedance_terminals, 
-                                    admittance=sp.Impedance(series_impedance_mag, '', 'pu', cnx_type='Série'))
-            self.component_list.append(component)
+                                    impedance=sp.Impedance(series_impedance_mag, '', 'pu', cnx_type='Série'))
+            component.add_instance()
             sc.Bars(series_impedance_terminals)
         elif temp_form.__class__.__name__ == 'PuShuntImpedanceForm':
             shunt_impedance_mag = complex(temp_form.shunt_impedance_mag.data)
             shunt_impedance_terminals = (0, temp_form.t1.data)
             component = sc.Generic('Impedância Shunt', 
                                     shunt_impedance_terminals, 
-                                    admittance=sp.Impedance(shunt_impedance_mag, '', 'pu', cnx_type='Shunt'))
-            self.component_list.append(component)
+                                    impedance=sp.Impedance(shunt_impedance_mag, '', 'pu', cnx_type='Shunt'))
+            component.add_instance()
             sc.Bars(shunt_impedance_terminals)
         elif temp_form.__class__.__name__ == 'PuSeriesAdmittanceForm':
             series_admittance_mag = complex(temp_form.series_admittance_mag.data)
@@ -129,7 +126,8 @@ class FormToComponents():
             component = sc.Generic('Admitância Série', 
                                     series_admittance_terminals, 
                                     admittance=sp.Admittance(series_admittance_mag, '', 'pu', cnx_type='Série'))
-            self.component_list.append(component)
+            component.add_instance()
+            component.add_instance()
             sc.Bars(series_admittance_terminals)            
         elif temp_form.__class__.__name__ == 'PuShuntAdmittanceForm':
             shunt_admittance_mag = complex(temp_form.shunt_admittance_mag.data)
@@ -137,7 +135,7 @@ class FormToComponents():
             component = sc.Generic('Admitância Shunt', 
                                     shunt_admittance_terminals, 
                                     admittance=sp.Admittance(shunt_admittance_mag, '', 'pu', cnx_type='Shunt'))
-            self.component_list.append(component)
+            component.add_instance()
             sc.Bars(shunt_admittance_terminals)     
         self.not_null()
                         

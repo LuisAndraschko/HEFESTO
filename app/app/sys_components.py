@@ -3,6 +3,7 @@ import app.sys_primetives as sp
 import app.operations as op
 import cmath as cm
 import math as m
+import copy
 
 class Components():
 
@@ -10,7 +11,7 @@ class Components():
     def del_instances(cls):
         cls.instances = []
 
-    def __init__(self, terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic, flux_km, flux_mk) -> None:
+    def __init__(self, terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic, flux_km, flux_mk, power_loss) -> None:
         self.terminals = terminals
         self.impedance = impedance
         self.admittance = admittance
@@ -21,6 +22,35 @@ class Components():
         self.characteristic = characteristic
         self.flux_km = flux_km
         self.flux_mk = flux_mk
+        self.power_loss = power_loss
+
+    def check_primitives(self):
+        d = op.DefaultDictFormat()
+        if self.impedance and not isinstance(self.impedance, dict):
+            if self.impedance.measurement_unit != 'pu':
+                self.impedance = d.get_primitive_struct(self.impedance, 'nominal')
+            else:
+                self.impedance = d.get_primitive_struct(self.impedance, 'pu')
+        elif self.admittance and not isinstance(self.admittance, dict):
+            if self.admittance.measurement_unit != 'pu':
+                self.admittance = d.get_primitive_struct(self.admittance, 'nominal')
+            else:
+                self.admittance = d.get_primitive_struct(self.admittance, 'pu')
+        elif not isinstance(self.power, dict):
+            if self.power.measurement_unit != 'pu':
+                self.power = d.get_primitive_struct(self.power, 'nominal')
+            else:
+                self.power = d.get_primitive_struct(self.power, 'pu')
+        elif not isinstance(self.voltage_t0, dict):
+            if self.voltage_t0.measurement_unit != 'pu':
+                self.voltage_t0 = d.get_primitive_struct(self.voltage_t0, 'nominal')
+            else:
+                self.voltage_t0 = d.get_primitive_struct(self.voltage_t0, 'pu')
+        elif not isinstance(self.voltage_t1, dict):
+            if self.voltage_t1.measurement_unit != 'pu':
+                self.voltage_t1 = d.get_primitive_struct(self.voltage_t1, 'nominal')
+            else:
+                self.voltage_t1 = d.get_primitive_struct(self.voltage_t1, 'pu')
 
     def set_terminals(self, terminals):
         self.terminals = terminals
@@ -74,6 +104,10 @@ class Components():
             equal = False
         return equal
 
+    def set_power_loss(self, power_loss):
+        self.power_loss = power_loss
+
+
 class Generators(Components):
     instances = []
 
@@ -83,11 +117,14 @@ class Generators(Components):
     def get_id(self):
         return len(Generators.instances)
 
-    def __init__(self, terminals=None, impedance=None,
-                 power=None, voltage_t0=None, voltage_t1=None, pf=None, characteristic=None, admittance=None, flux_km=None, flux_mk=None) -> None:
+    def __init__(self, terminals=None, impedance=None, power=None, 
+                 voltage_t0=None, voltage_t1=None, pf=None, characteristic=None, admittance=None, 
+                 flux_km=None, flux_mk=None, power_loss=None) -> None:
         self.id = self.get_id()
         self.name = 'Gerador'
-        super().__init__(terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic, flux_km, flux_mk)
+        super().__init__(terminals, impedance, admittance, power, 
+                         voltage_t0, voltage_t1, pf, characteristic, 
+                         flux_km, flux_mk, power_loss)
         self.add_instance()
      
     @classmethod
@@ -104,11 +141,14 @@ class Transformers(Components):
     def add_instance(self):
         Transformers.instances.append(self)
     
-    def __init__(self, terminals=None, impedance=None,
-                 power=None, voltage_t0=None, voltage_t1=None, pf=None, characteristic=None, admittance=None, flux_km=None, flux_mk=None) -> None:
+    def __init__(self, terminals=None, impedance=None, power=None, 
+                 voltage_t0=None, voltage_t1=None, pf=None, characteristic=None, admittance=None, 
+                 flux_km=None, flux_mk=None, power_loss=None) -> None:
         self.id = self.get_id()
         self.name = 'Transformador'
-        super().__init__(terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic, flux_km, flux_mk)
+        super().__init__(terminals, impedance, admittance, power, 
+                         voltage_t0, voltage_t1, pf, characteristic, 
+                         flux_km, flux_mk, power_loss)
         self.add_instance()
 
     @classmethod
@@ -125,11 +165,14 @@ class ShortTLines(Components):
     def add_instance(self):
         ShortTLines.instances.append(self)
     
-    def __init__(self, terminals=None, impedance=None, admittance=None,
-                 power=None, voltage_t0=None, voltage_t1=None, pf=None, characteristic=None, flux_km=None, flux_mk=None) -> None:
+    def __init__(self, terminals=None, impedance=None, power=None, 
+                 voltage_t0=None, voltage_t1=None, pf=None, characteristic=None, admittance=None, 
+                 flux_km=None, flux_mk=None, power_loss=None) -> None:
         self.id = self.get_id()
         self.name = 'Linha de Transmissão Curta'
-        super().__init__(terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic, flux_km, flux_mk)
+        super().__init__(terminals, impedance, admittance, power, 
+                         voltage_t0, voltage_t1, pf, characteristic, 
+                         flux_km, flux_mk, power_loss)
         self.add_instance()
 
     @classmethod
@@ -146,11 +189,14 @@ class MediumTLines(Components):
     def add_instance(self):
         MediumTLines.instances.append(self)
     
-    def __init__(self, terminals=None, impedance=None, admittance=None,
-                 power=None, voltage_t0=None, voltage_t1=None, pf=None, characteristic=None, flux_km=None, flux_mk=None) -> None:
+    def __init__(self, terminals=None, impedance=None, power=None, 
+                 voltage_t0=None, voltage_t1=None, pf=None, characteristic=None, admittance=None, 
+                 flux_km=None, flux_mk=None, power_loss=None) -> None:
         self.id = self.get_id()
         self.name = 'Linha de Trasmissão Média'
-        super().__init__(terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic, flux_km, flux_mk)
+        super().__init__(terminals, impedance, admittance, power, 
+                         voltage_t0, voltage_t1, pf, characteristic, 
+                         flux_km, flux_mk, power_loss)
         self.add_instance()
 
     def set_impedance(self, impedance, cnx_type=None, key=None):
@@ -194,11 +240,14 @@ class Loads(Components):
     def add_instance(self):
         Loads.instances.append(self)
     
-    def __init__(self, terminals=None, power=None, pf=None, characteristic=None, impedance=None, admittance=None, 
-                 voltage_t0=None, voltage_t1=None, flux_km=None, flux_mk=None) -> None:
+    def __init__(self, terminals=None, impedance=None, power=None, 
+                 voltage_t0=None, voltage_t1=None, pf=None, characteristic=None, admittance=None, 
+                 flux_km=None, flux_mk=None, power_loss=None) -> None:
         self.id = self.get_id()
         self.name = 'Carga'
-        super().__init__(terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic, flux_km, flux_mk)
+        super().__init__(terminals, impedance, admittance, power, 
+                         voltage_t0, voltage_t1, pf, characteristic, 
+                         flux_km, flux_mk, power_loss)
         self.add_instance()
 
     @classmethod
@@ -268,6 +317,16 @@ class Bars():
         self.check_id_format()
         self.check_existance()
 
+    @classmethod
+    def order(cls):
+        ordered = [None for i in range(len(cls.instances))]
+        for idx, bar in enumerate(cls.instances):
+            if bar.id != idx:
+                ordered[bar.id] = bar
+            else:
+                ordered[idx] = bar
+        cls.instances = ordered
+        
     def check_id_format(self):
         if isinstance(self.id, tuple):
             Bars(self.id[0])
@@ -345,6 +404,7 @@ class Bars():
         d = op.DefaultDictFormat()
         current_bar = self
         knownVoltageBar = current_bar.findFirstKnowVoltageBar(bars)
+        
         knownVoltage = mc.get_value(knownVoltageBar.voltage, 'base')
         terminals = (current_bar.id, knownVoltageBar.id)
         selected_component = None
@@ -382,7 +442,6 @@ class Bars():
             ul_id_list.insert(0, 0)
         return ul_id_list
                 
-
     @classmethod
     def del_instances(cls):
         cls.instances = []
@@ -398,12 +457,10 @@ class Generic(Components):
         Generic.instances.append(self)
     
     def __init__(self, type=None, terminals=None, power=None, pf=None, characteristic=None, impedance=None, admittance=None, 
-                 voltage_t0=None, voltage_t1=None, flux_km=None, flux_mk=None) -> None:
+                 voltage_t0=None, voltage_t1=None, flux_km=None, flux_mk=None, power_loss=None) -> None:
         self.id = self.get_id()
         self.type = type
-        super().__init__(terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic, flux_km, flux_mk)
-        self.add_instance()
-
+        super().__init__(terminals, impedance, admittance, power, voltage_t0, voltage_t1, pf, characteristic, flux_km, flux_mk, power_loss)
 
     @classmethod
     def del_instances(cls):

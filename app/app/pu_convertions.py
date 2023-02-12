@@ -32,7 +32,7 @@ class ExcelToValues():
         self.pu_conv_load()
 
     def get_mag_mult_measure(self, df, row_index, column_index):
-        mag = str(df.iloc[row_index, column_index]).replace(",", ".")
+        mag = str(df.iloc[row_index, column_index]).replace(",", ".").replace('""', "")
         mult = df.iloc[row_index, column_index + 1]
         measure = df.iloc[row_index, column_index + 2]
         return (mag, mult, measure)
@@ -363,7 +363,6 @@ class ValuesToComponents():
             g = sc.Generators(tg, zpug, pg, vg)
             ValuesToComponents.bar(tg)
             ValuesToComponents.component_list.append(g)
-        
 
     @staticmethod
     def transformer(transformers):
@@ -762,6 +761,8 @@ class Run():
         self.bars = sc.Bars.get_bars()
 
     def prep_bars(self, components):
+        sc.Bars.order()
+        self.bars = sc.Bars.get_bars()
         # Setting adjacent bars
         for bar in self.bars: 
             if bar.id != 0:

@@ -85,7 +85,7 @@
         <tbody>
           {% for idx, value in enumerate(x) %}
             <tr>
-              <td>{{idx}} ➡ {{ print_template.get_rounded_string(value) }}</td>
+              <td>{{idx + 1}} ➡ {{ print_template.get_rounded_string(value) }}</td>
             </tr>
           {% endfor %}
         </tbody>
@@ -122,15 +122,15 @@
   {% endfor %}
 </div>
 
-<div class="row border border-dark rounded p-3 mx-3 my-3">
-    <div class="col-md-3 m-0 p-0">
+<div class="row p-3 justify-content-center">
+    <div class="col-md-5 border border-dark rounded mx-3 my-3">
       <p class="h2 m-0 p-0 text-center">Fluxos pelos ramos</p>
       <table class="dataframe data table table-striped table-hover">
         <thead>
           <tr>
             <th scope="col">Ramo</th>
-            <th scope="col">MW</th>
-            <th scope="col">MVAr</th>
+            <th scope="col">Potência Ativa - MW</th>
+            <th scope="col">Potência Reativa - MVAr</th>
           </tr>
         </thead>
         <tbody>
@@ -151,7 +151,35 @@
         </tbody>
       </table>
     </div>
+    <div class="col-md-5 border border-dark rounded mx-3 my-3">
+      <p class="h2 m-0 p-0 text-center">Perdas nos ramos</p>
+      <table class="dataframe data table table-striped table-hover">
+        <thead>
+          <tr>
+            <th scope="col">Ramo</th>
+            <th scope="col">Potência Ativa - MW</th>
+            <th scope="col">Potência Reativa - MVAr</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for component in component_list %}
+            {% if 'Série' in component.type %}
+              <tr>
+                <td>{{component.terminals}} ➡ </td>
+                <td>{{ print_template.get_rounded_string(component.power_loss.real) }}</td>
+                <td>{{ print_template.get_rounded_string(component.power_loss.imag) }}</td>
+              </tr>
+            {% endif %}
+          {% endfor %}
+          <tr>
+            <td>Perdas no Sistema ➡ </td>
+            <td>{{ print_template.get_rounded_string(powerflux_cls.system_power_loss.real) }}</td>
+            <!-- <td>{{ powerflux_cls.system_power_loss.real }}</td> -->
+            <td>{{ print_template.get_rounded_string(powerflux_cls.system_power_loss.imag) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 </div>
-
 
 {% endblock content %}
