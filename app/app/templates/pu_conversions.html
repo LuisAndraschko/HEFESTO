@@ -2,6 +2,26 @@
 {% block content %}     
     <div class="row mb-3 mx-4 p-0">
         <div class="container col-md-8 border border-dark rounded py-3 ps-3">
+            <div class="container p-0">
+                <button class="btn btn-dark my-1 w-50 d-flex justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1" aria-expanded="false" aria-controls="collapse1">
+                    Acessar Teoria
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-question-circle" viewBox="0 0 16 16">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                        <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286zm1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z"/>
+                    </svg>
+                </button>
+                <div class="collapse" id="collapse1">
+                    <div class="card card-body">
+                        <div class="embed-responsive embed-responsive-16by9">
+                            <iframe class="embed-responsive-item" width="560" height="315" src="https://www.youtube.com/embed/3J5JXfhZlLc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                        </div>
+                        <p> Caso o vídeo não solucione suas dúvidas, acesse a playlist sobre o tema do professor Luís César</p>
+                        <div class="d-flex justify-content-end p-1">
+                            <a href="https://www.youtube.com/playlist?list=PLotZYHQBkGgTjrbee8KgF_6XDZFmWc6yv" class="p-2 btn btn-primary bg-dark" target="_blank">Ir para Playlist</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
             {% if not component_list %}
                 <div class="container p-0">
                     <button class="btn btn-dark my-1 w-50 d-flex justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#collapse0" aria-expanded="false" aria-controls="collapse0">
@@ -70,13 +90,13 @@
                 </div>
             {% endif %}
             <div class="container p-0">
-                <button class="btn btn-dark my-1 w-50 d-flex justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1" aria-expanded="false" aria-controls="collapse1">
+                <button class="btn btn-dark my-1 w-50 d-flex justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2" aria-expanded="false" aria-controls="collapse2">
                     Adicionar Gerador
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-plus-circle-fill ms-2" viewBox="0 0 16 16">
                         <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3v-3z"/>
                     </svg>
                 </button>
-                <div class="collapse" id="collapse1">
+                <div class="collapse" id="collapse2">
                     <div class="card card-body">
                         <form method="POST" action="" class="px-3">
                             {{ gen_form.hidden_tag() }}
@@ -156,13 +176,13 @@
                 </div>
             </div>
             <div class="container p-0">
-                <button class="btn btn-dark my-1 w-50 d-flex justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2" aria-expanded="false" aria-controls="collapse2">
+                <button class="btn btn-dark my-1 w-50 d-flex justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3" aria-expanded="false" aria-controls="collapse3">
                     Adicionar Transformador
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-plus-circle-fill ms-2" viewBox="0 0 16 16">
                         <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3v-3z"/>
                     </svg>
                 </button>
-                <div class="collapse" id="collapse2">
+                <div class="collapse" id="collapse3">
                     <div class="card card-body">
                         <form method="POST" action="" class="px-3">
                             {{ tran_form.hidden_tag() }}
@@ -266,13 +286,13 @@
                 </div>
             </div>
             <div class="container p-0">
-                <button class="btn btn-dark my-1 w-50 d-flex justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3" aria-expanded="false" aria-controls="collapse3">
+                <button class="btn btn-dark my-1 w-50 d-flex justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4" aria-expanded="false" aria-controls="collapse4">
                     Adicionar Linha de Trasmissão Curta
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-plus-circle-fill ms-2" viewBox="0 0 16 16">
                         <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3v-3z"/>
                     </svg>
                 </button>
-                <div class="collapse" id="collapse3">
+                <div class="collapse" id="collapse4">
                     <div class="card card-body">
                         <form method="POST" action="" class="px-3">
                             {{ short_tline_form.hidden_tag() }}
@@ -338,13 +358,13 @@
                 </div>
             </div>
             <div class="container p-0">
-                <button class="btn btn-dark my-1 w-50 d-flex justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4" aria-expanded="false" aria-controls="collapse4">
+                <button class="btn btn-dark my-1 w-50 d-flex justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#collapse5" aria-expanded="false" aria-controls="collapse5">
                     Adicionar Linha de Trasmissão Média
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-plus-circle-fill ms-2" viewBox="0 0 16 16">
                         <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3v-3z"/>
                     </svg>
                 </button>
-                <div class="collapse" id="collapse4">
+                <div class="collapse" id="collapse5">
                     <div class="card card-body">
                         <form method="POST" action="" class="px-3">
                             {{ medium_tline_form.hidden_tag() }}
@@ -427,13 +447,13 @@
                 </div>
             </div>
             <div class="container p-0">
-                <button class="btn btn-dark w-50 d-flex justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#collapse5" aria-expanded="false" aria-controls="collapse5">
+                <button class="btn btn-dark w-50 d-flex justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#collapse6" aria-expanded="false" aria-controls="collapse6">
                     Adicionar Carga
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-plus-circle-fill ms-2" viewBox="0 0 16 16">
                         <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3v-3z"/>
                     </svg>
                 </button>
-                <div class="collapse" id="collapse5">
+                <div class="collapse" id="collapse6">
                     <div class="card card-body">
                         <form method="POST" action="" class="px-3">
                             {{ load_form.hidden_tag() }}
@@ -495,15 +515,15 @@
             </div>
             {% if not component_list %}
                 <div class="container p-0">
-                    <button class="btn btn-dark my-1 w-50 d-flex justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#collapse6" aria-expanded="false" aria-controls="collapse6">
+                    <button class="btn btn-dark my-1 w-50 d-flex justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#collapse7" aria-expanded="false" aria-controls="collapse7">
                         Adicionar Problema
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-plus-circle-fill ms-2" viewBox="0 0 16 16">
                             <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3v-3z"/>
                         </svg>
                     </button>
-                    <div class="collapse" id="collapse6">
-                        <div class="card card-body">
-                            <form method="POST" action="" enctype="multipart/form-data" class="px-3">
+                    <div class="collapse" id="collapse7">
+                        <div class="card card-body px-3">
+                            <form method="POST" action="" enctype="multipart/form-data">
                                 {{ file_form.hidden_tag() }}
                                 <fieldset>
                                     <div class="form-group">
@@ -522,6 +542,7 @@
                                     {{ file_form.submit_file(class="btn btn-secondary mb-3 mt-1 w-100 disabled") }}
                                 {% endif %}
                             </form>
+                            <a class="btn btn-secondary" href="{{ url_for('download_file') }}" role="button">Baixe modelo de planilha aqui!</a>
                         </div>
                     </div>
                 </div>
@@ -534,45 +555,72 @@
                     {% for component in component_list %}
                         <div class="dropdown m-0">
                             <button id="dropdown" class="btn btn-light border border-dark container-fluid p-0 m-0 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                {{ component.name }} {{ component.id }}
+                                {{ component.name }} {{ component.id + 1 }}
                             </button>
                             <ul class="dropdown-menu container-fluid" aria-labelledby="dropdown">
-                                {% for attr, value in component.__dict__.items() %}
-                                    {% if value.name == 'Potência' %}
-                                        <li class="dropdown-item">
-                                            Potência: 
-                                            {{ value.mag }}{{ value.multiplier }}{{ value.measurement_unit }}
-                                        </li>
-                                    {% endif %}
-                                    {% if value.name == 'Fator de Potência' %}
-                                        <li class="dropdown-item">
-                                            Fator de Potência: 
-                                            {{ value.pf }} {{ value.characteristic }}
-                                        </li>
-                                    {% endif %}
-                                    {% if value is mapping %}
-                                        {% if value['nominal'].name == 'Potência' %}
-                                            <li class="dropdown-item">
-                                                Potência: 
-                                                {{ value['nominal'].mag }}{{ value['nominal'].multiplier }}{{ value['nominal'].measurement_unit }}
-                                            </li>
-                                        {% endif %}
-                                        {% if value['nominal'].name == 'Tensão' %}
-                                            <li class="dropdown-item">
-                                                Tensão: 
-                                                {{ value['nominal'].mag }}{{ value['nominal'].multiplier }}{{ value['nominal'].measurement_unit }}
-                                                na barra: {{ value['nominal'].bar }}
-                                            </li>
-                                        {% endif %}
-                                        {% if value['nominal'].name == 'Impedância' %}
-                                            <li class="dropdown-item">
-                                                Impedância: 
-                                                {{ value['nominal'].mag }}{{ value['nominal'].multiplier }}{{ value['nominal'].measurement_unit }}
-                                                do tipo: {{ value['nominal'].characteristic }}
-                                            </li>
-                                        {% endif %} 
-                                    {% endif %}
-                                {% endfor %}
+                                {% if 'Classe Conversão PU' in component.name %}
+                                    <li class="dropdown-item">
+                                        Potência: 
+                                        {{ component.power['base'].mag.real }} {{ component.power['base'].multiplier }}{{ component.power['base'].measurement_unit }}
+                                    </li>
+                                    <li class="dropdown-item">
+                                        Tensão: 
+                                        {{ component.voltage['base'].mag.real }} {{ component.voltage['base'].multiplier }}{{ component.voltage['base'].measurement_unit }}
+                                    </li>
+                                {% elif 'Gerador' in component.name %}
+                                    <li class="dropdown-item">
+                                        Potência: 
+                                        {{ component.power['nominal'].mag.real }} {{ component.power['nominal'].multiplier }}{{ component.power['nominal'].measurement_unit }}
+                                    </li>
+                                    <li class="dropdown-item">
+                                        Tensão: 
+                                        {{ component.voltage_t0['nominal'].mag.real }} {{ component.voltage_t0['nominal'].multiplier }}{{ component.voltage_t0['nominal'].measurement_unit }}
+                                    </li>
+                                    <li class="dropdown-item">
+                                        Impedância: 
+                                        {{ component.impedance['nominal'].mag.real }} {{ component.impedance['nominal'].multiplier }}{{ component.impedance['nominal'].measurement_unit }}
+                                    </li>
+                                {% elif 'Transformador' in component.name %}
+                                    <li class="dropdown-item">
+                                        Potência: 
+                                        {{ component.power['nominal'].mag.real }} {{ component.power['nominal'].multiplier }}{{ component.power['nominal'].measurement_unit }}
+                                    </li>
+                                    <li class="dropdown-item">
+                                        Tensão no terminal de alta: 
+                                        {{ component.voltage_t0['nominal'].mag.real }} {{ component.voltage_t0['nominal'].multiplier }}{{ component.voltage_t0['nominal'].measurement_unit }}
+                                    </li>
+                                    <li class="dropdown-item">
+                                        Tensão no terminal de baixa: 
+                                        {{ component.voltage_t1['nominal'].mag.real }} {{ component.voltage_t1['nominal'].multiplier }}{{ component.voltage_t1['nominal'].measurement_unit }}
+                                    </li>
+                                    <li class="dropdown-item">
+                                        Impedância: 
+                                        {{ component.impedance['nominal'].mag.real }} {{ component.impedance['nominal'].multiplier }}{{ component.impedance['nominal'].measurement_unit }}
+                                    </li>
+                                {% elif 'Linha de Transmissão Curta' in component.name %}
+                                    <li class="dropdown-item">
+                                        Impedância Série: 
+                                        {{ component.impedance['nominal'].mag }} {{ component.impedance['nominal'].multiplier }}{{ component.impedance['nominal'].measurement_unit }}
+                                    </li>
+                                {% elif 'Linha de Transmissão Média' in component.name %}
+                                    <li class="dropdown-item">
+                                        Impedância Série: 
+                                        {{ component.impedance[0]['nominal'].mag }} {{ component.impedance[0]['nominal'].multiplier }}{{ component.impedance[0]['nominal'].measurement_unit }}
+                                    </li>
+                                    <li class="dropdown-item">
+                                        Impedância Shunt: 
+                                        {{ component.impedance[1]['nominal'].mag }} {{ component.impedance[1]['nominal'].multiplier }}{{ component.impedance[1]['nominal'].measurement_unit }}
+                                    </li>
+                                {% elif 'Carga' in component.name %}
+                                    <li class="dropdown-item">
+                                        Potência: 
+                                        {{ component.power['nominal'].mag.real }} {{ component.power['nominal'].multiplier }}{{ component.power['nominal'].measurement_unit }}
+                                    </li>
+                                    <li class="dropdown-item">
+                                        Fator de potência: 
+                                        {{ component.pf }} {{ component.characteristic }}
+                                    </li>
+                                {% endif %}     
                             </ul>
                         </div>
                     {% endfor %}
