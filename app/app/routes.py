@@ -29,10 +29,9 @@ titles = ['Pu Conversion Tool', 'Register', 'Login']
 
 
 @app.route("/")
-@app.route("/home")
-def home():
+def index():
     ClearObjects.clear_all()
-    return render_template('home.html')
+    return render_template('index.html')
 
 @app.route("/about")
 def about():
