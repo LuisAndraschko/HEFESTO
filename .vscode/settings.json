@@ -1,11 +1,11 @@
 {   
     "code-runner.executorMap": {
-        "python": ".//venv//Scripts//python.exe",
+        "python": "./app/venv/bin/python3",
     },
     "code-runner.runInTerminal": true,
     "autoDocstring.docstringFormat": "sphinx",
     "autoDocstring.generateDocstringOnEnter": true,
     "autoDocstring.includeExtendedSummary": true,
     "autoDocstring.guessTypes": true,
-    "python.defaultInterpreterPath": ".//venv//Scripts//python.exe"
+    "python.defaultInterpreterPath": "./app/venv/bin/python3"
 }
