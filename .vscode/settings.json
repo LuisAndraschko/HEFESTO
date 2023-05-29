@@ -1,11 +1,11 @@
 {   
     "code-runner.executorMap": {
-        "python": "./app/venv/bin/python3",
+        "python": "./flask/venv/bin/python3",
     },
     "code-runner.runInTerminal": true,
-    "autoDocstring.docstringFormat": "sphinx",
-    "autoDocstring.generateDocstringOnEnter": true,
-    "autoDocstring.includeExtendedSummary": true,
-    "autoDocstring.guessTypes": true,
-    "python.defaultInterpreterPath": "./app/venv/bin/python3"
+    "python.defaultInterpreterPath": "./flask/venv/bin/python3",
+    "python.analysis.extraPaths": [
+        "./flask/venv/lib/python3.10/site-packages/"
+    ],
+    "python.languageServer": "Pylance"
 }
