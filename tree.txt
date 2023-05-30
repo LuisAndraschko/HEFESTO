@@ -1,0 +1,79 @@
+.
+├── app
+│   ├── admitance_matrix.py
+│   ├── forms.py
+│   ├── __init__.py
+│   ├── matrix_reduction.py
+│   ├── operations.py
+│   ├── pfc.py
+│   ├── pu_convertions.py
+│   ├── __pycache__
+│   │   ├── __init__.cpython-310.pyc
+│   │   ├── __init__.cpython-311.pyc
+│   ├── round.py
+│   ├── routes.py
+│   ├── static
+│   │   ├── home_img
+│   │   │   ├── ABI.svg
+│   │   │   ├── CC.svg
+│   │   │   ├── desenho.svg
+│   │   │   ├── MAN.svg
+│   │   │   ├── PFC.svg
+│   │   │   └── RN.svg
+│   │   ├── main.css
+│   │   └── profile_pic
+│   │       ├── 50ed8e4799e451e2.jpg
+│   │       └── default.jpg
+│   ├── sys_components.py
+│   ├── sys_primetives.py
+│   ├── system_cnx_validation.py
+│   ├── templates
+│   │   ├── about.html
+│   │   ├── admittance_matrix.html
+│   │   ├── admittance_matrix_results.html
+│   │   ├── index.html
+│   │   ├── layout.html
+│   │   ├── matrix_reduction.html
+│   │   ├── pfc.html
+│   │   ├── pfc_results.html
+│   │   ├── pu_conversion_results.html
+│   │   ├── pu_conversions.html
+│   │   ├── short_circuit.html
+│   │   └── stability_analysis.html
+│   └── worksheets
+│       ├── admittance_matrix_model_with_data.xlsx
+│       ├── pfc_model_with_data.xlsx
+│       └── puconversion_model_with_data.xlsx
+├── Dockerfile
+├── run.py
+├── tree.txt
+└── venv
+    ├── bin
+    │   ├── activate
+    │   ├── activate.csh
+    │   ├── activate.fish
+    │   ├── Activate.ps1
+    │   ├── f2py
+    │   ├── f2py3
+    │   ├── f2py3.10
+    │   ├── flask
+    │   ├── ipython
+    │   ├── ipython3
+    │   ├── pip
+    │   ├── pip3
+    │   ├── pip3.10
+    │   ├── pygmentize
+    │   ├── python -> python3
+    │   ├── python3 -> /usr/bin/python3
+    │   └── python3.10 -> python3
+    ├── include
+    ├── lib
+    │   └── python3.10
+    ├── lib64 -> lib
+    ├── pyvenv.cfg
+    └── share
+        └── man
+            └── man1
+                └── ipython.1
+
+1258 directories, 11629 files
