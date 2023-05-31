@@ -20,9 +20,9 @@ import app.pfc as pfcm
 
 
 download_file_paths = {
-    'pu_conversion': './worksheets/puconversion_model_with_data.xlsx',
-    'admittance_matrix': './worksheets/admittance_matrix_model_with_data.xlsx',
-    'pfc': './worksheets/pfc_model_with_data.xlsx'
+    'pu_conversion': './static/worksheets/puconversion_model_with_data.xlsx',
+    'admittance_matrix': './static/worksheets/admittance_matrix_model_with_data.xlsx',
+    'pfc': './static/worksheets/pfc_model_with_data.xlsx'
 }
 
 titles = ['Pu Conversion Tool', 'Register', 'Login']
