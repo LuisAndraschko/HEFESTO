@@ -1,6 +1,7 @@
+# __init__.py
 from flask import Flask
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/static')
 
 from config import config
 app.config.from_object(config.Config)

@@ -1,3 +1,4 @@
+# docker-compose.yml
 version: "3.8"
 
 services:
@@ -9,11 +10,11 @@ services:
     environment:
       - APP_NAME=MyFlaskApp
     expose:
-      - "8080:8080"
+      - "8080:5000"
 
   nginx:
     build: ./nginx
     container_name: nginx
     restart: always
     ports:
-      - "80:80"
+      - 8080:80
