@@ -8,8 +8,30 @@
 │   ├── pfc.py
 │   ├── pu_convertions.py
 │   ├── __pycache__
+│   │   ├── admitance_matrix.cpython-310.pyc
+│   │   ├── admitance_matrix.cpython-311.pyc
+│   │   ├── forms.cpython-310.pyc
+│   │   ├── forms.cpython-311.pyc
 │   │   ├── __init__.cpython-310.pyc
 │   │   ├── __init__.cpython-311.pyc
+│   │   ├── matrix_reduction.cpython-310.pyc
+│   │   ├── matrix_reduction.cpython-311.pyc
+│   │   ├── operations.cpython-310.pyc
+│   │   ├── operations.cpython-311.pyc
+│   │   ├── pfc.cpython-310.pyc
+│   │   ├── pfc.cpython-311.pyc
+│   │   ├── pu_convertions.cpython-310.pyc
+│   │   ├── pu_convertions.cpython-311.pyc
+│   │   ├── round.cpython-310.pyc
+│   │   ├── round.cpython-311.pyc
+│   │   ├── routes.cpython-310.pyc
+│   │   ├── routes.cpython-311.pyc
+│   │   ├── sys_components.cpython-310.pyc
+│   │   ├── sys_components.cpython-311.pyc
+│   │   ├── sys_primetives.cpython-310.pyc
+│   │   ├── sys_primetives.cpython-311.pyc
+│   │   ├── system_cnx_validation.cpython-310.pyc
+│   │   └── system_cnx_validation.cpython-311.pyc
 │   ├── round.py
 │   ├── routes.py
 │   ├── static
@@ -44,36 +66,7 @@
 │       ├── admittance_matrix_model_with_data.xlsx
 │       ├── pfc_model_with_data.xlsx
 │       └── puconversion_model_with_data.xlsx
-├── Dockerfile
 ├── run.py
-├── tree.txt
-└── venv
-    ├── bin
-    │   ├── activate
-    │   ├── activate.csh
-    │   ├── activate.fish
-    │   ├── Activate.ps1
-    │   ├── f2py
-    │   ├── f2py3
-    │   ├── f2py3.10
-    │   ├── flask
-    │   ├── ipython
-    │   ├── ipython3
-    │   ├── pip
-    │   ├── pip3
-    │   ├── pip3.10
-    │   ├── pygmentize
-    │   ├── python -> python3
-    │   ├── python3 -> /usr/bin/python3
-    │   └── python3.10 -> python3
-    ├── include
-    ├── lib
-    │   └── python3.10
-    ├── lib64 -> lib
-    ├── pyvenv.cfg
-    └── share
-        └── man
-            └── man1
-                └── ipython.1
+└── tree.txt
 
-1258 directories, 11629 files
+7 directories, 62 files
