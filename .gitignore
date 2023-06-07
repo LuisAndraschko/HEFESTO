@@ -1,0 +1,17 @@
+# Python-related files
+*.pyc
+__pycache__/
+venv/
+
+# Environment variables
+.env
+
+# IDE and editor files
+.vscode/
+
+# Compiled files
+*.class
+*.o
+*.pyd
+*.so
+
