@@ -9,3 +9,7 @@ venv/
 
 # Ignore sensitive configuration files
 config/
+
+chat-template.txt
+tree.txt
+.vscode
