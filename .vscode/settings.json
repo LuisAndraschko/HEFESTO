@@ -1,11 +1,11 @@
 {   
     "code-runner.executorMap": {
-        "python": "./flask/venv/bin/python3",
+        "python": "./venv/bin/python3",
     },
     "code-runner.runInTerminal": true,
-    "python.defaultInterpreterPath": "./flask/venv/bin/python3",
+    "python.defaultInterpreterPath": "./venv/bin/python3",
     "python.analysis.extraPaths": [
-        "./flask/venv/lib/python3.10/site-packages/"
+        "./venv/lib/python3.10/site-packages/"
     ],
     "python.languageServer": "Pylance"
 }
